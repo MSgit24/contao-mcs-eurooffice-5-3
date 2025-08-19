@@ -1,0 +1,38 @@
+<?php if (!defined('TL_ROOT')) die('You can not access this file directly!');
+
+use Mcs\ContaoMcsEurooffice\Controller\BackendModule\EoBeKlasseGetSelects;
+
+// Hinzufügen eigener Felder
+// ohne weitere Anpassungen sind die Felder dann im Backend auch an dieser Stelle einsortiert
+$GLOBALS['TL_DCA']['tl_calendar_events']['palettes']['default'] = str_replace
+(
+		'teaser',
+		'teaser,prgkat',
+		$GLOBALS['TL_DCA']['tl_calendar_events']['palettes']['default']
+);
+
+// Anpassung der Palette
+// Angaben aus der originalen tl_calendar_events.php, ergänzt um ";{prgkat_legend},prgkat"
+$GLOBALS['TL_DCA']['tl_calendar_events']['palettes'] = array
+(
+	'__selector__' => array('addTime', 'addImage', 'recurring', 'addEnclosure', 'source', 'published'),
+	'default'      => '{title_legend},title,alias,author;{date_legend},addTime,startDate,endDate;{details_legend},location,teaser;{prgkat_legend},prgkat;{image_legend},addImage;{recurring_legend},recurring;{enclosure_legend:hide},addEnclosure;{source_legend:hide},source;{expert_legend:hide},cssClass,noComments;{publish_legend},published'
+);
+
+// Hinzufügen der Feld-Konfigurationen von prgkat
+$GLOBALS['TL_DCA']['tl_calendar_events']['fields']['prgkat'] = array
+(
+		'label'     => &$GLOBALS['TL_LANG']['tl_calendar_events']['prgkat'],
+		'exclude'   => true,
+		'inputType' => 'select',
+		//'options_callback' => array('tl_calendar_events_eo', 'getEOPrgArray'),
+			'options_callback' => function(){
+				// getEOPrgArray: ohne Param alle, mit entspr. ausgewählt 
+				// eo: ToDo: bei Bedarf alle zurückgeben lassen, gruppiert nach Status
+				return EoBeKlasseGetSelects::getEOPrgArray("aktuell");
+			},
+		'eval'      => array('multiple'=> false,'tl_class'=>'w50 clr','size'=>15),
+		'sql'       => "varchar(150) NOT NULL default 'ohne Prg.'"
+);
+
+?>

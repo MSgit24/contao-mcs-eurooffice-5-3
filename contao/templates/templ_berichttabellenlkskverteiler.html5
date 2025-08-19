@@ -1,0 +1,52 @@
+<!-- <pre>
+ <?php //print_r($this->vertAdr); ?>
+ <?php //$this->showTemplateVars(); ?>
+ <?php //echo "GET: " . \Input::get('start_datum'); ?> 
+ </pre> -->
+
+<?php /** eo: Ref: siehe Eintrag hinter "block" - eigene css-Klasse für den ges. Bereich ... **/ ?>
+<div class="<?php echo $this->class ?> block eoinfoliste"<?php echo $this->cssID ?><?php if ($this->style): ?> style="<?= $this->style ?>"<?php endif; ?>>
+
+	<?php if ($this->headline): ?>
+		<<?php echo $this->hl ?>><?php echo $this->headline ?></<?php echo $this->hl ?>>
+	<?php endif ?>
+	
+	<?php if (empty($this->vertAdr)): ?>
+		<p style="color:red;" class="warning">Es konnten keine Verteiler ermittelt werden :-(</p>
+	<?php else: ?>
+
+		<div id="ber_verttab" class="">
+		<?php
+
+		foreach ($this->vertAdr as $lksk => $empf_arr) {
+			echo '<p><strong>'.$lksk.'</strong></p>' . "\n"; 
+			echo '<table border=0 style="font-size: x-small;">';
+			
+			echo '<tr><th></th>';
+			foreach ($this->themenAlle as $themen_kopf) {
+				echo '<th class="rotate"><div><span>'.$themen_kopf['title'].'</span></div></th>';
+			}
+			echo '<th></th></tr>' . "\n";
+			
+				foreach ($empf_arr as $mail => $mail_arr) {
+					echo '<tr><td style="text-align:left;">'.$mail.'</td>';
+					
+					foreach ($mail_arr['themen'] as $tag) {
+						echo '<td>'.$tag.'</td>';
+					}
+					
+					//echo '<td style="text-align:left;">'.$mail_arr['kommentar'].'</td></tr>' . "\n"; 
+					echo '<td style="text-align:left;">'.$mail_arr['name'].'</td>'.'<td style="text-align:left;">'.$mail_arr['firstname'].'</td>'.'<td style="text-align:left;">'.$mail_arr['kommentar'].'</td></tr>'. "\n"; 
+				}
+			echo '</table>';
+			echo '<p>&nbsp;</p><hr>' . "\n"; 
+		}
+		
+		?>
+		</div>
+		
+		
+	<?php endif; ?>
+  
+</div>
+

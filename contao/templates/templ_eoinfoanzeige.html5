@@ -1,0 +1,180 @@
+<!-- <pre>
+ <?php //print_r($this->eoinfo); ?>
+ <?php //print_r($this->anlagen_alt); ?>
+ <?php //$this->showTemplateVars(); ?>
+ <?php // echo "GET: " . $this->Input->get('eoidneu'); ?> 
+ <?php //echo "uID: " . $this->author; ?> 
+ </pre> -->
+ 
+
+ 
+<div class="<?php echo $this->class ?> block"<?php echo $this->cssID ?><?php if ($this->style): ?> style="<?= $this->style ?>"<?php endif; ?>>
+	<?php if ($this->headline): ?>
+		<<?php echo $this->hl ?>><?php echo $this->headline ?></<?php echo $this->hl ?>>
+	<?php endif ?>
+  
+	<?php if (empty($this->eoinfo)): ?>
+		<p style="color:red;" class="warning">Hier ist nichts zum Anzeigen angekommen :-(</p>
+	<?php else: ?>
+
+		<?php $eoinfo = $this->eoinfo; ?>
+		
+		
+		<h2><?php echo $eoinfo['title']; ?></h2>
+		<p class="eokommentar">Euro-Office Info vom <?php echo date("d.m.Y", $eoinfo['datum']); ?></p>
+		
+
+
+		<?php 
+			if ($this->teaserVisible) {
+		?>
+		
+		<div id="eoinfoteaser">
+			<table>
+			<tr><td colspan="2"><b>Überblick:</b></td></tr>
+			<?php echo (strlen(trim($eoinfo['teaser_frist'])) > 0) ? 			'<tr><td style="width:11rem;"><u>Antragsfrist</u>:</td><td>' . $eoinfo['teaser_frist'] . "</td></tr>" : "" ; ?>
+			<?php echo (strlen(trim($eoinfo['teaser_berechtigt'])) > 0) ? 		'<tr><td style="width:11rem;"><u>Antragsberechtigte</u>:&nbsp;</td><td>' . $eoinfo['teaser_berechtigt'] . "</td></tr>" : "" ; ?>
+			<?php echo (strlen(trim($eoinfo['teaser_fmgeber'])) > 0) ? 			'<tr><td style="width:11rem;"><u>Zuwendungsgeber</u>:</td><td>' . $eoinfo['teaser_fmgeber'] . "</td></tr>" : "" ; ?>
+			<?php echo (strlen(trim($eoinfo['teaser_themen'])) > 0) ? 			'<tr><td style="width:11rem;"><u>Thema</u>:</td><td>' . $eoinfo['teaser_themen'] . "</td></tr>" : "" ; ?>
+			<?php echo (strlen(trim($eoinfo['teaser_hinweis'])) > 0) ? 			'<tr><td style="width:11rem;"><u>Hinweis</u>:</td><td>' . $eoinfo['teaser_hinweis'] . "</td></tr>" : "" ; ?>
+			<?php echo (strlen(trim($eoinfo['teaser_versandthemen'])) > 0) ? 		'<tr><td style="width:11rem;"><u>Verteiler</u>:</td><td>' . $eoinfo['teaser_versandthemen'] . "</td></tr>" : "" ; ?>
+			<?php echo (strlen(trim($eoinfo['teaser_aktualisierung'])) > 0) ? 		'<tr style="background:Lavender;"><td style="width:11rem;"><u>Aktualisierung</u>:</td><td>' . $eoinfo['teaser_aktualisierung'] . "</td></tr>" : "" ; ?>
+			</table>
+			
+		</div>
+		
+		<?php
+			}
+		?>
+		
+		
+		
+		<div id="eoinfotext">
+			<?php
+			$eoinfotext = $eoinfo['infotext_processed'] ?? $eoinfo['infotext'];
+			?>
+			<div id="box_ansprechpartner">
+			<span style="color:white; background-color:#d2cbcb; display:block; line-height:1.2rem;">&nbsp;Ansprechperson bei<br>&nbsp;Rückfragen u. a.:&nbsp;</span>
+			<div id="box_ansprechpartnerinfo">
+				
+				<ul>
+				<li data-icon=""><strong><?= $eoinfo['bearbeiter']?></strong></li>
+				<li data-icon="✉"><a href="mailto:<?= $eoinfo['bearbeiter_mail']?>"><?= $eoinfo['bearbeiter_mail']?></a></li>
+				<li data-icon=""><?= $eoinfo['bearbeiter_phone'] ?></li>
+				</ul>
+				
+			</div>
+			</div>
+			<?php echo $eoinfotext; ?>
+			
+
+		<?php
+			
+			if ($this->feedbackData !== null) {
+				echo '<p style="margin-top:2.5rem;">Feedback:&nbsp;<i>Geben Sie uns gerne eine kurze Rückmeldung, inwieweit diese Euro-Office-Info von Relevanz ist (durch Klick auf einen der beiden Links):<br>&rArr; <a href="' . $this->feedbackData['link_ist_relevant'] . '" target="_blank">ist relevant</a> / &rArr; <a href="' . $this->feedbackData['link_weniger_relevant'] . '" target="_blank">ist weniger relevant</a></i></p>';
+			}
+			
+			// Feedbackteil Ende --------
+		?>
+		</div>
+
+
+		<?php if (!empty($this->anlagen)): ?>
+			<div id="eoinfoanlagen" class="ce_downloads block">
+			<h2>Downloads</h2>
+			<?php if ($this->Input->get('eoidneu') <= 8035): ?>
+				<p style="float:right; margin-top:-1rem; margin-right:-1rem;">
+					<a href=<?php echo 'eo-info-versand.html?ph=1&eoidneu=' . $this->Input->get('eoidneu'); ?>>
+						<img src="files/themes/EO-Intranet/mail-forward-2.png">
+						<span style="line-height: 24px; vertical-align: top;"> Anlagen versenden</span>
+					</a>
+				</p>
+			<?php endif; // keine Infos aus dem alten System versenden ?>
+		
+			<dl>
+			<?php
+			
+			$anlagen = $this->anlagen;
+			foreach ($anlagen as $anlagenart => $datei_arr) {
+				echo '<dt>'.$anlagenart.'</dt>';
+				foreach ($datei_arr as $nr => $datei_info) {
+					// Strukturierte Daten aus Controller verwenden
+					if (is_array($datei_info)) {
+						echo '<dd><a href="datei-ausliefern.html?file='.$datei_info['link'].'">'.$datei_info['text'].'</a> <span class="eokommentar">(eingestellt am '. $datei_info['datum'] .')</span></dd>';
+					} else {
+						// Fallback für unverarbeitete Daten
+						echo '<dd>'.$datei_info.'</dd>';
+					}
+				} 
+			}
+			?>
+			</dl>
+			</div>
+		<?php endif; // keine Anlagen dabei ?>  
+		
+		<?php if (!empty($this->anlagen_alt)): ?>
+			<div id="eoinfoanlagen">
+			<dl>
+			<?php
+			$anlagen_alt = $this->anlagen_alt;
+			$anlagen_alt_datum = $this->anlagen_alt_datum;
+			foreach ($anlagen_alt as $anlagenart => $datei_arr) {
+				echo '<dt>'.$anlagenart.'</dt>';
+				foreach ($datei_arr as $dateipfad => $dateibez) {
+					// Linktext ist Dateiname ohne Extension und Anlagenartkennzeichen
+					$linktext_arr = explode(" (",$dateibez);
+					$linktext = $linktext_arr[0];
+					echo '<dd><a href="datei-ausliefern.html?file='.$dateipfad.'">'.$linktext.'</a> <span class="eokommentar">(eingestellt am '. $anlagen_alt_datum[$dateipfad] .')</span></dd>';
+				} 
+			}
+			?>
+			</dl>
+			</div>
+		<?php endif; // keine Anlagen dabei ?>  
+		
+		<?php if ($this->schlagworte): ?>
+			<div id="eoinfodetails_schlw" style="display:table-cell; float:left;">
+			<strong>zugeordnete Schlagworte:</strong>
+			<ul>
+			<?php
+				foreach ($this->schlagworte as $key => $schlagwort) {
+					echo "<li>".$schlagwort."</li>";
+				}
+			?>
+			</ul>
+			</div>
+		<?php endif; // keine Schlagworte dabei ?>
+		
+		
+		<?php if ($this->programme): ?>
+			<div id="eoinfodetails_prg" style="display:table-cell; float:left;">
+			<strong>zugeordnete Programme:</strong>
+			<ul>
+			<?php
+				foreach ($this->programme as $key => $programm) {
+					echo "<li>".$programm."</li>";
+				}
+			?>
+			</ul>
+			</div>
+		<?php endif; // keine Prgrammangaben dabei ?>
+		
+	<?php endif; // keine eoinfo-Daten angekommen ?>  
+	
+		<?php if (!empty($this->str_publ4WE_html)): ?>
+			<div id="eoinfodetails_prg" style="display:table-cell; float:left;">
+			<strong>Sichtbarkeit:</strong>
+			<ul>
+			<?php
+				echo $this->str_publ4WE_html;
+				
+				echo $this->str_publ4LG_html;
+				
+				echo $this->str_publ4Koord_html;
+			?>
+			</ul>
+			</div>
+		<?php endif; // keine Prgrammangaben dabei ?>
+	
+	
+</div>

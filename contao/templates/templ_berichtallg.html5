@@ -1,0 +1,73 @@
+<?php /** eo: Ref: siehe Eintrag hinter "block" - eigene css-Klasse für den ges. Bereich ... **/ ?>
+<div class="<?php echo $this->class ?> block eoinfoliste"<?php echo $this->cssID ?><?php if ($this->style): ?> style="<?= $this->style ?>"<?php endif; ?>>
+
+	<?php if ($this->headline): ?>
+		<<?php echo $this->hl ?>><?php echo $this->headline ?></<?php echo $this->hl ?>>
+	<?php endif ?>
+		
+		<p></p>
+		<h2>Programme und Schlagworte [autom. Auszählung, jeweils jetziger Zeitpunkt]</h2>
+		<p>Anzahl Schlagworte: <?php echo $this->SchlwAnz; ?></p>
+		
+		<?php
+		foreach ($this->PrgAnz as $status => $anz) {
+			echo '<p>Anzahl Programme ['.$status.']: '.$anz.'</p>';
+		}
+		
+		echo '<p><hr></p>';
+		echo '<h2>EO-Infodienst - Anzahl Dateien [autom. Auszählung, jeweils jetziger Zeitpunkt]</h2>';
+		
+		foreach ($this->eoDateien as $jahr => $Dateien_arr) {
+		$anz_ges = 0;
+			echo '<p><strong>'.$jahr.'</strong></p>' . "\n"; 
+			echo '<table>';
+			
+			echo '<tr>';
+			echo '<th>Dateityp&nbsp;</th><th>Anzahl</th>';
+			echo '</tr>' . "\n";
+			
+				foreach ($Dateien_arr as $typ => $anz) {
+					echo '<tr><td style="text-align:left;">'.$typ.'</td><td style="text-align:right;">'.number_format($anz, 0, ',', '.').'</td></tr>' . "\n"; 
+					$anz_ges = $anz_ges + $anz;
+				}
+			echo '<tr><td style="text-align:left;">&nbsp;</td><td style="text-align:right; font-weight: bold;">'.number_format($anz_ges, 0, ',', '.').'</td></tr>' . "\n";
+			echo '</table>';
+			echo '<p class="eokommentar">*) Keine echten HTML-Dateien, entspricht der bisherigen Zählung von EO-Infos.<br>&nbsp;</p>' . "\n"; 
+		}
+		
+		echo '<p><hr></p>';
+		echo '<h2>Dateien im Bereich Strukturfonds (gesamt) [autom. Auszählung, jeweils jetziger Zeitpunkt]</h2>';
+		
+			echo '<table>';
+			
+			echo '<tr>';
+			echo '<th>Dateityp&nbsp;</th><th>Anzahl</th>';
+			echo '</tr>' . "\n";
+				$anz_ges = 0;
+				foreach ($this->sfDateien as $typ => $anz) {
+					echo '<tr><td style="text-align:left;">'.$typ.'</td><td style="text-align:right;">'.number_format($anz, 0, ',', '.').'</td></tr>' . "\n"; 
+					$anz_ges = $anz_ges + $anz;
+				}
+			echo '<tr><td style="text-align:left;">&nbsp;</td><td style="text-align:right; font-weight: bold;">'.number_format($anz_ges, 0, ',', '.').'</td></tr>' . "\n";
+			echo '</table>' . "\n"; 
+			
+		echo '<p><hr></p>';
+		echo '<h2>Dateien im Bereich Corona-Hilfe (gesamt) [autom. Auszählung, jeweils jetziger Zeitpunkt]</h2>';
+		
+			echo '<table>';
+			
+			echo '<tr>';
+			echo '<th>Dateityp&nbsp;</th><th>Anzahl</th>';
+			echo '</tr>' . "\n";
+				$anz_ges = 0;
+				foreach ($this->coronaDateien as $typ => $anz) {
+					echo '<tr><td style="text-align:left;">'.$typ.'</td><td style="text-align:right;">'.number_format($anz, 0, ',', '.').'</td></tr>' . "\n"; 
+					$anz_ges = $anz_ges + $anz;
+				}
+			echo '<tr><td style="text-align:left;">&nbsp;</td><td style="text-align:right; font-weight: bold;">'.number_format($anz_ges, 0, ',', '.').'</td></tr>' . "\n";
+			echo '</table>' . "\n"; 
+		
+		?>
+
+</div>
+

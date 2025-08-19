@@ -1,0 +1,426 @@
+<?php
+
+// declare(strict_types=1);
+
+/*
+ * This file is part of eurooffice.
+ *
+ * (c) MS 2025 <schepke@mcon-consulting.de>
+ * @license GPL-3.0-or-later
+ * For the full copyright and license information,
+ * please view the LICENSE file that was distributed with this source code.
+ * @link https://github.com/mcs/contao-mcs-eurooffice
+ */
+
+namespace Mcs\ContaoMcsEurooffice\Controller\BackendModule;
+
+/*
+ * Klasse `EoBeKlasseEoinfoPdf` dient als Backend-Modul, um EO-Infos als PDF zu generieren.
+ * Es werden folgende EO-PDFs damit generiert:
+ * - Downloadversion
+ * - Versandversion
+ * - Voransicht der Versandversion
+ */
+
+// PHP 8.3 & Contao 5 Kompatibilität: Use-Statements für Contao-Klassen hinzugefügt
+use Contao\BackendModule;
+use Contao\Database;
+use Contao\Config;
+use Contao\Controller;
+// TCPDF für Contao 4.13+ - Direkter Import ohne Namespace
+// use TCPDF;
+use Contao\System;
+use Contao\ProjectDir;
+use Mcs\ContaoMcsEurooffice\Controller\BackendModule\EoPdf;
+
+class EoBeKlasseEoinfoPdf extends BackendModule
+{
+	/**
+	 * Template
+	 * @var string
+	 */
+	protected $strTemplate = '';
+
+
+	/**
+	 * Generate the module
+	 */
+	protected function compile() {}
+
+	// PHP 8.3 Kompatibilität: Methode als static deklariert, da sie statisch aufgerufen wird
+	// Parameter: EO-ID ..., Empfänger-ID mit Vorgabewert (wenn zur PDF-Erstellung per Link aufgerufen = 0)
+	public static function generateEoPdf($eoid, $empf_id = 0, $pdf_pv = 'eopdf')
+	{
+
+		/** Inhalte für das EO-Info PDF: 
+			- Angaben für Kopfbereich (Einrichtung, Ansprechpartner, PDF-Datum)
+			- EO-Inhalte (Titel, Textteil, Autor/Versender) **/
+		$database = Database::getInstance();
+
+		/* EO-Inhalte */
+		//$id = $eoid;
+		$result = $database->prepare('SELECT * FROM tl_eo_be_eoinfos WHERE id=?')->execute($eoid);
+		$db_erg = $result->fetchAllAssoc();
+		$eoinfo_arr = $db_erg[0];
+
+		$title = $eoinfo_arr['title'];
+		$strArticle = $eoinfo_arr['infotext'];
+		//dump($eoinfo_arr);
+
+		/* Inhalte Kopfbereich */
+		$pdfdatum = date("d.m.Y", $eoinfo_arr['pdfdatum']);
+
+		// if ($empf_id == 0 && $pdf_pv == 'allg') {
+		if ($empf_id == 0) {
+			// Angaben für allg. EO-PDF zum Einstellen mit der EO-Info --------------------------------------
+			$empf_arr = array(
+				// "company" => "Euro-Office - Landkreis/kreisfreie Stadt",
+				"company" => "",
+				"pdf_anrkopf" => "",
+				"pdf_anrtext" => "Sehr geehrte Damen und Herren!"
+			);
+
+			$eopdf_art = "downloadversion";
+		} else { // EO-PDF Versandversion -------------------------------------------------------------------
+			// Member-ID wurde übergeben
+			$result = $database->prepare('SELECT * FROM tl_member WHERE id=?')->execute($empf_id);
+			$empf_arr = array(
+				"company" => $result->company,
+				"pdf_anrkopf" => $result->pdf_anrkopf,
+				"pdf_anrtext" => $result->pdf_anrtext
+			);
+
+			$eopdf_art = "versandversion";
+		}
+
+
+		/* Name Versender EO-Info */
+		$autor_id = $eoinfo_arr['author'];
+		$result = $database->prepare('SELECT name FROM tl_user WHERE id=?')->execute($autor_id);
+		$autor_name = $result->name;
+
+
+		// Generate article (eo: Teil aus core entnommen und angepasst)
+		$strArticle = html_entity_decode($strArticle, ENT_QUOTES, Config::get('characterSet'));
+		//$strArticle = $this->convertRelativeUrls($strArticle, '', true);
+		$strArticle = Controller::convertRelativeUrls($strArticle, '', true);
+
+
+		/** Empfänger der EO-Info **/
+
+		if ($eopdf_art == "versandversion") {
+			$strEmpfUeberBetreff = '<table border="0" width="600" cellpadding="2">';
+			$strEmpfUeberBetreff .= '<tr><td width="40">An:</td><td width="400">' . $empf_arr['company'] . ' - ' . $empf_arr['pdf_anrkopf'] . '</td></tr>';
+			$strEmpfUeberBetreff .= '<tr><td width="40">Von:</td><td width="400">MCON - ' . $autor_name . '</td></tr>';
+			$strEmpfUeberBetreff .= "</table>";
+			$eoAbsEmpfMailversion = $strEmpfUeberBetreff;
+		}
+
+		// Angleich PDF, Mail, Web : Abstände mit LineHeight gesetzt
+		$eokopfbereich = '<p style="line-height:1.5">&nbsp;<br><b>'. $title .'</b><br>&nbsp;</p>';
+		// $eokopfbereich = '<p style="line-height:2.3">&nbsp;<br><b>' . $title . '</b></p>';
+
+		/** Teaser der EO-Info **/
+		/* 
+		   zum 1.1.2021 sollen die themat. Verteiler nicht mehr im Betreff aufgeführt werden, sondern in der Teasertabelle eingetragen sein
+		   diese liegen serialisiert in Spalte vers_themen in der Tab der EO-Infos (später dann auch in der Versandtabelle)
+		*/
+		// $versandthemen_tmp = deserialize($eoinfo_arr['vers_themen']);
+		$versandthemen_tmp = \Contao\StringUtil::deserialize($eoinfo_arr['vers_themen']);
+		// Initialisiere Array für Versandthemen - verhindert Fehler bei implode()
+		$arrVersandthemen4teaser = array();
+		if (is_array($versandthemen_tmp)) {
+			foreach ($versandthemen_tmp as $key => $versandthemen_nr) {
+				$result = $database->prepare('SELECT title FROM tl_eo_be_themen WHERE id=?')->execute($versandthemen_nr);
+				$arrVersandthemen4teaser[] = $result->title;
+			}
+		}
+		// Alte Zeile auskommentiert - kann Fehler verursachen wenn $arrVersandthemen4teaser kein Array ist
+		// $versandthemen4teaser = implode(", ", $arrVersandthemen4teaser);
+		// Sichere Version: Prüfe ob Array und nicht leer
+		$versandthemen4teaser = (is_array($arrVersandthemen4teaser) && !empty($arrVersandthemen4teaser)) ? implode(", ", $arrVersandthemen4teaser) : "";
+		$strTeaser = "";
+		$teasercheckallg = trim($eoinfo_arr['teaser_frist']) . trim($eoinfo_arr['teaser_berechtigt']) . trim($eoinfo_arr['teaser_fmgeber']) . trim($eoinfo_arr['teaser_themen']) . trim($eoinfo_arr['teaser_hinweis']);
+		if (strlen($teasercheckallg) > 0) {
+			// $strTeaser = "<table border=0><tr><td colspan='2'><b>Überblick zur Euro-Office Info:</b></td></tr>";
+			$strTeaser = '<font size="8"><table border="0" width="600" bgcolor="#f5f5f5" cellpadding="2"><tr><td width="120"><b>Überblick</b></td><td width="490">&nbsp;</td></tr>';
+			(strlen(trim($eoinfo_arr['teaser_frist']))      > 0) ? $strTeaser .= '<tr><td width="120">Antragsfrist:</td><td width="490">'             . $eoinfo_arr['teaser_frist']      . "</td></tr>" : $strTeaser .= "";
+			(strlen(trim($eoinfo_arr['teaser_berechtigt'])) > 0) ? $strTeaser .= '<tr><td width="120">Antragsberechtigte:&nbsp;</td><td width="490">' . $eoinfo_arr['teaser_berechtigt'] . "</td></tr>" : $strTeaser .= "";
+			(strlen(trim($eoinfo_arr['teaser_fmgeber']))    > 0) ? $strTeaser .= '<tr><td width="120">Zuwendungsgeber:</td><td width="490">'        . $eoinfo_arr['teaser_fmgeber']    . "</td></tr>" : $strTeaser .= "";
+			(strlen(trim($eoinfo_arr['teaser_themen']))     > 0) ? $strTeaser .= '<tr><td width="120">Thema:</td><td width="490">'            . $eoinfo_arr['teaser_themen']     . "</td></tr>" : $strTeaser .= "";
+			(strlen(trim($eoinfo_arr['teaser_hinweis']))    > 0) ? $strTeaser .= '<tr><td width="120">Hinweis:</td><td width="490">'                  . $eoinfo_arr['teaser_hinweis']    . "</td></tr>" : $strTeaser .= "";
+			(strlen(trim($versandthemen4teaser))      		> 0) ? $strTeaser .= '<tr><td width="120">Verteiler:</td><td width="490">'         . $versandthemen4teaser            . "</td></tr>" : $strTeaser .= "";
+			(strlen(trim($eoinfo_arr['teaser_aktualisierung']))     > 0) ? $strTeaser .= '<tr bgcolor="#E6E6FA"><td width="120">Aktualisierung:</td><td width="490">'            . $eoinfo_arr['teaser_aktualisierung']     . "</td></tr>" : $strTeaser .= "";
+			$strTeaser .= "</table></font>";
+		}
+		if ($eopdf_art == "downloadversion") {
+			// $eokopfbereich .= '<p>&nbsp;</p>';
+		}
+
+		$eokopfbereich .= $strTeaser;
+
+		// Angleich PDF, Mail, Web : Abstände mit LineHeight gesetzt
+		$eokopfbereich .= '<p style="line-height:1">&nbsp;</p>';
+		$eokopfbereich .= '<p style="line-height:3">' . $empf_arr['pdf_anrtext'] . '</p>';
+		//$eokopfbereich .= '<p><br>'. $empf_arr['pdf_anrtext'] .'<br></p>';
+
+
+		$eoendbereich = '<p>&nbsp;</p><p>Mit freundlichen Grüßen<br>';
+		$eoendbereich .= 'MCON</p>';
+		$eoendbereich .= '<p>' . $autor_name . '</p>';
+
+		// eo: nachsehen, ob ein pagebreak vorliegt, html-String hier noch am kürzesten
+		//     s. unten bei writeHTML ...
+		$posPagebreak = strpos($strArticle, "<!-- pagebreak -->");
+
+		$strArticle = $eokopfbereich . $strArticle . $eoendbereich;
+
+		// URL decode image paths (see #6411)
+		$strArticle = preg_replace_callback('@(src="[^"]+")@', function ($arg) {
+			return rawurldecode($arg[0]);
+		}, $strArticle);
+		// Handle line breaks in preformatted text
+		$strArticle = preg_replace_callback('@(<pre.*</pre>)@Us', function ($arg) {
+			return str_replace("\n", '<br>', $arg[0]);
+		}, $strArticle);
+		// echo $strArticle;
+		// exit;
+		// Default PDF export using TCPDF
+		// eo: Replace 7ff hinzugefügt (Links auf EO-Infos raus, Seitenumbruch, ...)
+		// eo: Ref: "<!-- pagebreak -->" Ersatz hier, da sich "<tcpdf method="AddPage" />" nicht mit dem
+		//     tinyMCE einsetzen ließ
+		$arrSearch = array(
+			'@<span style="text-decoration: ?underline;?">(.*)</span>@Us',
+			'@(<img[^>]+>)@',
+			'@(<div[^>]+block[^>]+>)@',
+			'@[\n\r\t]+@',
+			'@<br( /)?><div class="mod_article@',
+			'@href="([^"]+)(pdf=[0-9]*(&|&amp;)?)([^"]*)"@',
+			'@<a href="http:\/\/intranet.eurooffice.de\/index\.php\/eo-cms-info-anzeigen\.html\?eoidneu=[0-9]*">(.*)<\/a>@iU',
+			'@\[&\]@',
+			'@<br> @',
+			'@\[nbsp\]@',
+			//'@(<!-- verfaelscht-pagebreak -->)@'
+		);
+		$arrReplace = array(
+			'<u>$1</u>',
+			'<br>$1',
+			'<br>$1',
+			' ',
+			'<div class="mod_article',
+			'href="$1$4"',
+			'$1',
+			'&',
+			'<br>',
+			' ',
+			//'<br pagebreak="true" />'
+		); // auf <tcpdf method="AddPage" /> reagiert TCPDF hier nicht, ggf. muss noch etwas eingebunden (import) oder erlaubt werden
+		$strArticle = preg_replace($arrSearch, $arrReplace, $strArticle);
+		// $strArticle = preg_replace('/<a href="http:\/\/intranet.eurooffice.de\/index\.php\/eo-cms-info-anzeigen\.html\?eoidneu=[0-9]*">(.*)<\/a>/', '$1', $strArticle);
+
+		// TCPDF configuration =================================================================
+		// TCPDF für Contao 4.13+ - keine separate Konfigurationsdatei mehr nötig
+		// Sprachkonfiguration für TCPDF
+		$l = array();
+		$l['a_meta_dir'] = 'ltr';
+		$l['a_meta_charset'] = Config::get('characterSet');
+		$l['a_meta_language'] = substr($GLOBALS['TL_LANGUAGE'], 0, 2);
+		$l['w_page'] = 'page';
+
+		// TCPDF Konfiguration für Contao 4.13
+		if (!defined('PDF_PAGE_ORIENTATION')) {
+			define('PDF_PAGE_ORIENTATION', 'P');
+		}
+		if (!defined('PDF_UNIT')) {
+			define('PDF_UNIT', 'mm');
+		}
+		if (!defined('PDF_PAGE_FORMAT')) {
+			define('PDF_PAGE_FORMAT', 'A4');
+		}
+		if (!defined('PDF_CREATOR')) {
+			define('PDF_CREATOR', 'Contao CMS');
+		}
+		if (!defined('PDF_AUTHOR')) {
+			define('PDF_AUTHOR', 'Euro-Office');
+		}
+		if (!defined('PDF_MARGIN_LEFT')) {
+			define('PDF_MARGIN_LEFT', 15);
+		}
+		if (!defined('PDF_MARGIN_TOP')) {
+			define('PDF_MARGIN_TOP', 22);
+		}
+		if (!defined('PDF_MARGIN_RIGHT')) {
+			define('PDF_MARGIN_RIGHT', 15);
+		}
+		if (!defined('PDF_MARGIN_BOTTOM')) {
+			define('PDF_MARGIN_BOTTOM', 15);
+		}
+		if (!defined('PDF_IMAGE_SCALE_RATIO')) {
+			define('PDF_IMAGE_SCALE_RATIO', 1.25);
+		}
+
+		// Create new PDF document
+		// TCPDF über verschiedene Wege laden (Contao 4.13+ Kompatibilität)
+		if (!class_exists('\TCPDF')) {
+			// Zuerst versuchen: Manueller TCPDF Autoloader
+			$tcpdfAutoload = __DIR__ . '/../../../../vendor/tcpdf_autoload.php';
+			if (file_exists($tcpdfAutoload)) {
+				require_once $tcpdfAutoload;
+			}
+
+			// Fallback: Versuche TCPDF über vendor autoload zu laden
+			if (!class_exists('\TCPDF')) {
+				$vendorAutoload = __DIR__ . '/../../../../vendor/autoload.php';
+				if (file_exists($vendorAutoload)) {
+					require_once $vendorAutoload;
+				}
+			}
+
+			// Letzter Fallback: Prüfe ob TCPDF verfügbar ist
+			if (!class_exists('\TCPDF')) {
+				throw new \Exception('TCPDF-Klasse nicht verfügbar. TCPDF wurde manuell installiert - bitte prüfen Sie die Installation.');
+			}
+		}
+
+		// @var \eoModul\EoPdf $pdf PDF-Dokument Instanz
+		$pdf = new EoPdf(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true);
+		// Set document information
+		$pdf->SetCreator(PDF_CREATOR);
+		$pdf->SetAuthor(PDF_AUTHOR);
+		$pdf->SetTitle($title);
+		$pdf->SetSubject($title);
+		// this-Problem $pdf->SetKeywords($this->keywords);
+		// Prevent font subsetting (huge speed improvement)
+		$pdf->setFontSubsetting(false);
+		// Remove default header
+		$pdf->setPrintHeader(false);
+
+		// Footer einrichten
+		$pdf->setPrintFooter(true);
+		// Set margins
+		//$pdf->SetMargins(20, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+		$pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+		// Set auto page breaks
+		$pdf->SetAutoPageBreak(true, PDF_MARGIN_BOTTOM);
+		// Set image scale factor
+		$pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+		// Set some language-dependent strings
+		$pdf->setLanguageArray($l);
+		// Initialize document and add a page
+		$pdf->AddPage();
+		// Set font
+		// eo: Ref: auf Helvetica setzen, kleinere Dateien, schnellere Erstellung
+		$pdf->SetFont('helvetica', '', 10);
+		// Angleich PDF, Mail, Web
+		$pdf->setCellHeightRatio(1.3);
+
+		// Angleich PDF, Mail, Web
+		$tagvs = array(
+			'p' => array(0 => array('n' => 0, 'h' => ''), 1 => array('n' => 0.25, 'h' => '')),
+			'ul' => array(0 => array('n' => -1, 'h' => ''), 1 => array('n' => 0.01, 'h' => '')),
+			'ol' => array(0 => array('n' => -1, 'h' => ''), 1 => array('n' => 0.01, 'h' => '')),
+			'div' => array(0 => array('n' => 0.301, 'h' => ''), 1 => array('n' => 0.9, 'h' => '')),
+			// //'li' => array(0 => array('n' => 0.1, 'h' => ''), 1 => array('n' => 1, 'h' => ''))
+		);
+		$pdf->setHtmlVSpace($tagvs);
+
+		// Angleich PDF, Mail, Web : starke Einrückung der Listen vermeiden, Wert 4 ist bündig zum Text
+		$pdf->setListIndentWidth(5);
+
+
+		// neu mit svg
+		$img_file = TL_ROOT . '/files/themes/EO-Intranet/EO-PDF_Bilder/MCON-Kopf_EO-Info-PDF_Pfade.svg';
+		$pdf->ImageSVG($img_file, $x = 145.0, $y = 15, $w = '', $h = 19, $link = '', $align = '', $palign = '', $border = 0, $fitonpage = false);
+
+
+		// Datum auf der ersten Seite - mit kleinerer Schrift
+		$pdf->SetFont('helvetica', '', 9); // Schriftgröße auf 8pt setzen
+		// $pdf->Text(144.4, 38, $pdfdatum);
+		$pdf->Text(170, 38, $pdfdatum);
+		$pdf->SetFont('helvetica', '', 10); // Zurück zur Standard-Schriftgröße
+
+		// Titel auf der ersten Seite - HTML-formatiert
+		$eoTitel = '<h1>Euro-Office Infodienst</h1>';
+		$pdf->writeHTMLCell(0, 0, 15, 20, $eoTitel, 0, 0, false, true, 'L', true);
+		/* Die writeHTMLCell()-Methode hat folgende Parameter:
+			$w (0) - Breite der Zelle (0 = volle Breite)
+			$h (0) - Höhe der Zelle (0 = automatisch)
+			$x (10) - X-Position (10mm vom linken Rand)
+			$y (40) - Y-Position (40mm vom oberen Rand)
+			$html ($eoTitel) - Der HTML-Inhalt
+			$border (0) - Rahmen (0 = kein Rahmen)
+			$ln (0) - Zeilenumbruch nach der Zelle
+			$fill (false) - Hintergrund füllen
+			$reseth (true) - Reset der Höhe
+			$align ('L') - Ausrichtung (L = links)
+			$autopadding (true) - Automatisches Padding
+		*/
+
+		if ($eopdf_art == "versandversion") {
+			$pdf->writeHTMLCell(0, 0, 15, 30, $eoAbsEmpfMailversion, 0, 0, false, true, 'L', true);
+		}
+
+		// Y-Position für den nachfolgenden Text explizit setzen
+		$pdf->SetY(42); // oder den gewünschten Y-Wert
+
+
+		// eo: PDF-Erzeugung mit Seitenumbruch via <!-- pagebreak --> bzw. <br pagebreak="true" /> geht deutlich schneller,
+		//     als mit der chunk-Methode, deshalb bei einseitigen Infos vermeiden
+		//     !!! außerdem: exakte Positionierung des Datum nicht mit HTML möglich, somit hierüber und gezielt nur auf Seite 1
+		//         (muss hinter dem writeHTML erfolgen ...)
+		if ($posPagebreak === false) {
+			$pdf->writeHTML($strArticle, true, 0, true, 0);
+			// $pdf->Text(144.4, 39, $pdfdatum);
+		} else {
+			$delimiter = '<!-- pagebreak -->';
+			$chunks    = explode($delimiter, $strArticle);
+			$cnt       = count($chunks);
+			for ($i = 0; $i < $cnt; $i++) {
+				// Neue Seite für jeden Chunk außer dem ersten
+				if ($i > 0) {
+					$pdf->AddPage();
+					// Y-Position für den nachfolgenden Text explizit setzen
+					$pdf->SetY(8); // oder den gewünschten Y-Wert
+				}
+
+				$pdf->writeHTML($chunks[$i], true, 0, true, 0);
+
+				// if ($i == 0) {
+				// 	// nur auf der ersten Seite das Datum einsetzen
+				// 	$pdf->Text(144.4, 40, $pdfdatum);
+				// }
+			}
+		}
+
+		// Close and output PDF document
+		$pdf->lastPage();
+
+
+		if ($empf_id == 0 && $pdf_pv == 'allg') {
+			// allg. EO-PDF wurde erstellt: Ausgabe an Browser und exit
+			// eo: Ref: I > sofort anzeigen, D > Downloadangebot
+			//$pdf->Output(standardize(ampersand($title, false)) . '.pdf', 'I');
+			//$pdf->Output('OT_Euro-Office Info Originaltext.pdf', 'I');
+			// orig bis Datum im Namen : $pdf->Output(TL_ROOT . '/files/EO-Intranet/EO-CMS_Infos/EO-Info-PDFs_Voransicht/OT_Euro-Office Info Originaltext.pdf', 'F');
+			$str_PDFPfadName = TL_ROOT . '/files/EO-Intranet/EO-CMS_Infos/EO-Info-PDFs_Voransicht/OT_Euro-Office Info vom ' . date("d.m.Y") . '.pdf';
+			$pdf->Output($str_PDFPfadName, 'F');
+			//exit;
+		}
+		if ($empf_id == 126 && $pdf_pv == 'mail') {
+			// allg. EO-PDF wurde erstellt: Ausgabe an Browser und exit
+			// eo: Ref: I > sofort anzeigen, D > Downloadangebot
+			//$pdf->Output(standardize(ampersand($title, false)) . '.pdf', 'I');
+
+			// ging nur, solange paralleles Login im FE und BE moeglich war:
+			//$pdf->Output('OT_Euro-Office Info Test Mailversion.pdf', 'I');
+
+			$pdf->Output(TL_ROOT . '/files/EO-Intranet/EO-CMS_Infos/EO-Info-PDFs_Voransicht/OT_Euro-Office Info Test Mailversion.pdf', 'F');
+			//exit;
+		}
+		if ($empf_id > 0) {
+			// individuelle EO-PDFs wurden erstellt: speichern und kein exit, da weiter im BE ...
+			// eo: Ref: F > speichern (geht auch parallel zur Ausgabe)
+			$pdf->Output(TL_ROOT . '/files/EO-Intranet/EO-CMS_Infos/EO-PDFs_Versandversionen/eoinfo_ot-' . $eoid . '-' . $empf_id . '.pdf', 'F');
+		}
+	}
+}

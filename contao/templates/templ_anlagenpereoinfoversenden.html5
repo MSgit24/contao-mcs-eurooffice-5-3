@@ -1,0 +1,158 @@
+<!--<pre>
+ <?php //print_r($this->phase); ?>
+ <?php //$this->showTemplateVars(); ?>
+ <?php //echo "GET: " . $this->Input->get('eoidneu'); ?> 
+ </pre>-->
+ 
+
+ 
+<div class="<?php echo $this->class ?> block"<?php echo $this->cssID ?><?php if ($this->style): ?> style="<?= $this->style ?>"<?php endif; ?>>
+
+	<?php if ($this->headline): ?>
+		<<?php echo $this->hl ?>><?php echo $this->headline ?></<?php echo $this->hl ?>>
+	<?php endif ?>
+  
+	<?php if (empty($this->phase)): ?>
+		<p style="color:red;" class="warning">Hier ist nichts zum Anzeigen/Versenden angekommen :-(</p>
+	<?php else: ?>
+
+		<?php if ($this->phase == 1): ?>
+		
+			<!-- indexer::stop -->
+			<p>&nbsp;</p>
+			<div class="ce_form tableless block">
+
+			<form action="eo-info-versand.html" id="f6" method="post" enctype="application/x-www-form-urlencoded">
+				<div class="formbody">
+					
+					<?php if ($sollangezeigtwerden == "ja"): ?>
+					<div class="widget widget-text mandatory">
+						<label for="ctrl_33">
+							Absender
+						</label>
+						<input type="email" disabled name="AbsenderMailAdresse" id="ctrl_33" value="verteiler@eurooffice.de" required>
+					</div>
+					<input type="hidden" name="AbsenderMailAdresse" value="verteiler@eurooffice.de">
+					<?php endif ?>
+					
+					<div class="widget widget-text mandatory">
+						<label style="font-weight: bold;" for="ctrl_33b" class="mandatory">
+							<span class="invisible">Pflichtfeld </span>Mailadresse Versender<span class="mandatory">*</span>
+						</label>
+						<input style="width: 90%;" type="email" name="AntwortMailAdresse" id="ctrl_33b" class="text mandatory" value="<?php echo $this->replaceInsertTags("{{user::email}}"); ?>" required>
+						<input type="hidden" name="CcMailAdresse" value="<?php echo $this->replaceInsertTags("{{user::email}}"); ?>">
+					</div>
+					
+					<div style="margin-top: 1rem;" class="widget widget-text mandatory">
+						<label style="font-weight: bold;" for="ctrl_34" class="mandatory">
+							<span class="invisible">Pflichtfeld </span>Mailadresse Empfänger<span class="mandatory">*</span>
+						</label>
+						<input style="width: 90%;" type="email" name="EmpfaengerMailAdresse" id="ctrl_34" class="text mandatory" value="" required>
+					</div>
+					
+					<div style="margin-top: 1rem;" class="widget widget-text mandatory">
+						<label style="font-weight: bold;" for="ctrl_34b" class="mandatory">
+							<span class="invisible">Pflichtfeld </span>Betreff<span class="mandatory">*</span>
+						</label>
+						<input style="width: 90%;" type="text" name="Betreff" id="ctrl_34b" class="text mandatory" value="<?php echo $this->eoinfotitle ; ?>" required>
+					</div>
+					
+					<div style="margin-top: 1rem;" class="widget widget-textarea">
+						<label style="font-weight: bold;" for="ctrl_35" class="EoBeKlasseEoForms">Mailtext</label>
+						<textarea style="width: 90%;" name="Mailtext" id="ctrl_35" class="textarea" rows="8">
+Sehr geehrte Frau ..., Sehr geehrter Herr ..., Sehr geehrte Damen und Herren,
+
+...
+
+Mit freundlichen Grüßen
+
+<?php echo $this->replaceInsertTags("{{user::firstname}}") . " " . $this->replaceInsertTags("{{user::lastname}}"); ?>
+						</textarea>
+					</div>
+					<p><br></p>
+					
+					<?php if (!empty($this->anlagen)): ?>
+						<div class="widget widget-text">
+						<label for="anlagen" class="mandatory">
+							Dateianlagen zum Anhängen:
+						</label>
+						<dl id="anlagen">
+						<?php
+						$anlagen = $this->anlagen;
+						foreach ($anlagen as $anlagenart => $datei_arr) {
+							echo '<dt style="margin-top: 0.5rem;"><b>'.$anlagenart.'</b></dt>';
+							foreach ($datei_arr as $nr => $dateipfad) {
+								// datei-ausliefern.html des bisherigen EO-Systems ruft sendfiletobrowser auf - weiterverwenden, dafür muss "files/" raus
+								// $dateilink = str_replace("files/", "", $dateipfad);
+								// Linktext ist Dateiname ohne Extension und Anlagenartkennzeichen
+								$linktext_tmp = basename($dateipfad);
+								$linktext_arr = explode("_",$linktext_tmp);
+								$linktext = str_replace($linktext_arr[0]."_", "", $linktext_tmp);
+								$linktext = str_replace("_", " ", $linktext);
+								
+								// $objModel = \FilesModel::findMultipleByPaths(array($dateipfad));
+								// var_dump($objModel);
+								
+								// echo '<dd><a href="index.php/datei-ausliefern.html?file='.$dateilink.'">'.$linktext.'</a> </dd>';
+								echo '<input name="Dateien[]" class="checkbox" value="'.$dateipfad.'" type="checkbox">&nbsp;'.$linktext.'<br>';
+							} 
+						}
+						?>
+						</dl>
+						</div>
+					<?php endif; // keine Anlagen dabei ?>  
+					
+					<input type="hidden" name="REQUEST_TOKEN" value="<?php echo $this->replaceInsertTags("{{request_token}}"); ?>">
+					<input type="hidden" name="AbsenderMailName" value="<?php echo $this->replaceInsertTags("{{user::firstname}}") . " " . $this->replaceInsertTags("{{user::lastname}}"); ?>">
+					<input type="hidden" name="eoidneu" value="<?php echo $this->Input->get('eoidneu'); ?>">
+					<input type="hidden" name="ph" value="2">
+					
+					
+					
+					<div class="submit_container">
+					
+						<p>&nbsp;</p>
+						<p>Diese Mail geht in cc an: <?php echo $this->replaceInsertTags("{{user::email}}"); ?></p>
+						<input type="submit" id="ctrl_36" class="submit" value="versenden">
+					</div>
+				</div>
+			</form>
+			</div>
+			<!-- indexer::continue -->
+			<p>&nbsp;</p>
+			<div style="font-size:80%; padding: 0.4rem 0.4rem; width: 90%; border:1px solid darkblue;">
+			<h3 style="margin-top:0;">Anmerkungen</h3>
+			<p><strong>Anzahl Anlagen</strong></p>
+			<p>Bitte versenden Sie nur 3-4 Anlagen pro Mail, da wir sonst an die von unserem Provider gesetzten Grenzwerte stoßen und die Mail dann nicht versendet wird. Wenn nötig, können Sie mit dem "Pfeil zurück" nach dem Versand wieder zum Formular wechseln und andere Anlagen auswählen.</p>
+			<p><strong>Absender</strong></p>
+			<p>Einige kommunale Empfänger (Mailserver) akzeptieren auf Grund von Sicherheitseinstellungen keine eingehenden Mails mit dem eigenen Domainnamen. Ihr Name und eMailadresse wird deshalb entsprechend in die Mail eingesetzt und beim Empfänger angezeigt, je nach Mailprogramm kann aber auch die technisch relevante eurooffice.de- Absenderadresse angezeigt werden.</p>
+			</div>
+			<p>&nbsp;</p>
+		
+		<?php endif; // phase 1 ?>  
+		
+		
+		
+		<?php if ($this->phase == 2): ?>
+			<p>&nbsp;</p>
+			<h2 style="color:green">Ihre Mail wurde versendet!</h2>
+			<p>&nbsp;</p>
+			
+			<p>
+				<a href="<?php echo 'eo-cms-info-anzeigen.html?eoidneu=' . $this->eoidneu; ?>">zurück zur Euro-Office Info ...</a>
+			</p>
+			
+			<p>&nbsp;</p>
+			<?php
+				//===Eintrag in Log-System=========================================================================================
+				$log_bez_eobereich = 'Versand EO-Info von Anlagen zu "' . $this->eoinfotitle . '"';
+				$log_username = $this->replaceInsertTags("{{user::username}}");
+				//$this->log("$log_bez_eobereich durch $log_username", '', TL_ACCESS);
+				\System::log("$log_username : $log_bez_eobereich ", __CLASS__.'::'.__FUNCTION__, TL_ACCESS);
+			?>
+		<?php endif; // phase 2 ?>  
+		
+
+		
+	<?php endif; // keine eoinfo-Daten angekommen ?>  
+</div>

@@ -1,0 +1,84 @@
+<!--<pre>
+ <?php //print_r($this->eodateien); ?>
+ <?php //$this->showTemplateVars(); ?>
+ <?php //echo "POST: " . \Input::post('prg_id'); ?> 
+ </pre>-->
+ 
+
+ <?php /** eo: siehe Eintrag hinter "block" - eigene css-Klasse für den ges. Bereich ... **/ ?>
+ <div class="<?php echo $this->class ?> block eoinfoliste"<?php echo $this->cssID ?><?php if ($this->style): ?> style="<?= $this->style ?>"<?php endif; ?>>
+ 
+	 <?php if ($this->headline): ?>
+		 <<?php echo $this->hl ?>><?php echo $this->headline ?></<?php echo $this->hl ?>>
+	 <?php endif ?>
+	 
+	 <h3>Ergebnis Datenbankabfrage</h3>
+	 
+	 <div id="eodb_outp_head">
+	  <?php if ($this->outputTitel): ?>
+		 <h1><?php echo $this->outputTitel ?></h1>
+	 <?php endif ?>
+	 </div>
+	 
+	 <?php if ($this->outputBeschr): ?>
+	 <div class="eodb_outp_text">
+		 <h3>Beschreibung:</h3>
+		 <p><?php echo $this->outputBeschr ?></p>
+	 </div>
+	 <?php endif ?>
+	 
+	 <?php if ($this->fristen): ?>
+	 <div class="eodb_outp_text">
+		 <h3>Fristen:</h3>
+		 <?php $fristen = $this->fristen; ?>
+		 
+		 <?php foreach ($fristen as $fristid => $frist_arr): ?>
+		 <?php //dump($fristid); ?>
+			 <?php echo date("d.m.Y", $fristen[$fristid]['startDate']); ?> <i><?php echo strip_tags($fristen[$fristid]['teaser']); ?></i><br>
+		 <?php endforeach; ?>
+		 </div>
+	 <?php endif ?>
+ 
+	 <?php if (empty($this->eoinfos)): ?>
+		 <p style="color:red;" class="warning"><br>In der Datenbank sind alle Euro-Office-Infos ab 2006 erfasst. Infos aus den Vorjahren sind nicht mehr aufgenommen worden, können aber bei Interesse angefordert werden.</p>
+	 <?php else: ?>
+		 <div class="eodb_outp_text">
+		 <h3>Euro-Office Infos:</h3>
+		 <?php $eoinfos = $this->eoinfos; ?>
+		 <?php //dump($eoinfos); ?>
+		 <ul>
+		 <?php foreach ($eoinfos as $key => $eoinfo_arr): ?>
+			 <?php foreach ($eoinfo_arr as $nakey => $eoinfo_angaben): ?>
+				 <li><a href="<?php echo 'eo-cms-info-anzeigen.html?eoidneu=' . $nakey; ?>" target='_blank'><?php echo $eoinfo_angaben['title']; ?></a> (<?php echo $eoinfo_angaben['datum']; ?>)</li>
+			 <?php endforeach; ?>
+		 <?php endforeach; ?>
+		 </ul>
+		 </div>
+		  
+		 <?php if (empty($this->eodateien)): ?>
+			 <p style="color:red;" class="warning">Es wurden keine Anlagen zugeordnet.</p>
+		 <?php else: ?>
+			 <div id="eoinfoanlagen">
+			 <h3>Datei-Anlagen:</h3>
+			 <dl>
+			 <?php
+			 $anlagen = $this->eodateien;
+			 foreach ($anlagen as $anlagenart => $datei_arr) {
+				 echo '<section class="ce_accordionStart ce_accordion block">';
+					 echo '<div class="toggler">'.$anlagenart.'</div><div class="accordion"><div>';
+					 krsort($datei_arr);
+					 foreach ($datei_arr as $datei) {
+						 echo '<dd><a href="'.$datei['link'].'">'.$datei['bez'].'</a> ('.$datei['datum'].')</dd>';
+					 } 
+				 echo '</section>';
+			 }
+			 ?>
+			 </dl>
+			 </div>
+		 <?php endif; // keine Anlagen dabei ?>  
+		 
+	 <?php endif; ?>
+   
+ </div>
+ 
+ 

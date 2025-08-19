@@ -1,0 +1,121 @@
+<?php /** eo: Ref: siehe Eintrag hinter "block" - eigene css-Klasse für den ges. Bereich ... **/ ?>
+<?php /** Ausgabe der Tabelle in "Euro-Office intern" > "Verteilerversand" **/ ?>
+<div class="<?php echo $this->class ?> block eoinfoliste"<?php echo $this->cssID ?><?php if ($this->style): ?> style="<?= $this->style ?>"<?php endif; ?>>
+
+	<?php if ($this->headline): ?>
+		<<?php echo $this->hl ?>><?php echo $this->headline ?></<?php echo $this->hl ?>>
+	<?php endif ?>
+	
+	<?php if (empty($this->vertVers)): ?>
+		<p style="color:red;" class="warning">Es konnte kein Verteilerversand ermittelt werden :-(</p>
+	<?php else: ?>
+
+		<div id="ber_verstab" class="">
+		<?php
+
+		/* alte Version ohne Differenzierung nach Region --------------------------------
+		foreach ($this->vertVers as $jahr => $Vers_arr) {
+			echo '<p><strong>'.$jahr.'</strong></p>' . "\n"; 
+			echo '<table>';
+			
+			echo '<tr>';
+			echo '<th>Landkreis/Stadt</th><th>Anzahl Empfänger</th>';
+			echo '</tr>' . "\n";
+				foreach ($Vers_arr as $lksk => $empf_anz) {
+					echo '<tr><td style="text-align:left;">'.$lksk.'&nbsp;</td><td style="text-align:right;">'.number_format($empf_anz, 0, ',', '.').'</td></tr>' . "\n"; 
+				}
+			echo '<tr><td style="text-align:left;">&nbsp;</td><td style="text-align:right; font-weight: bold;">'.number_format(array_sum($Vers_arr), 0, ',', '.').'</td></tr>' . "\n";
+			echo '</table>';
+			echo '<p>&nbsp;</p><hr>' . "\n"; 
+		} -------------------------------------------------------------------------------*/
+		
+		foreach ($this->vertVers as $jahr => $Vers_arr) {
+			
+			echo '<p><strong>'.$jahr.'</strong></p>' . "\n"; 
+			echo '<table>';
+			
+			echo '<tr>';
+				echo '<th style="background-color: #f3f1f1;">LG Landkreise</th><th style="text-align:right; background-color: #f3f1f1;">Anzahl Empfänger</th>';
+			echo '</tr>' . "\n";
+			echo '<tr><td style="text-align:left;">Landkreis Celle&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Celle'], 0, ',', '.').'</td></tr>' . "\n"; 
+			echo '<tr><td style="text-align:left;">Landkreis Cuxhaven&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Cuxhaven'], 0, ',', '.').'</td></tr>' . "\n"; 
+			echo '<tr><td style="text-align:left;">Landkreis Harburg&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Harburg'], 0, ',', '.').'</td></tr>' . "\n"; 
+			echo '<tr><td style="text-align:left;">Landkreis Heidekreis&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Heidekreis'], 0, ',', '.').'</td></tr>' . "\n"; 
+			echo '<tr><td style="text-align:left;">Landkreis Lüchow-Dannenberg&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Lüchow-Dannenberg'], 0, ',', '.').'</td></tr>' . "\n"; 
+			echo '<tr><td style="text-align:left;">Landkreis Lüneburg&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Lüneburg'], 0, ',', '.').'</td></tr>' . "\n"; 
+			echo '<tr><td style="text-align:left;">Landkreis Osterholz&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Osterholz'], 0, ',', '.').'</td></tr>' . "\n"; 
+			echo '<tr><td style="text-align:left;">Landkreis Rotenburg/W.&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Rotenburg/W.'], 0, ',', '.').'</td></tr>' . "\n"; 
+			echo '<tr><td style="text-align:left;">Landkreis Uelzen&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Uelzen'], 0, ',', '.').'</td></tr>' . "\n"; 
+			echo '<tr><td style="text-align:left;">Landkreis Verden&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Verden'], 0, ',', '.').'</td></tr>' . "\n"; 
+
+			// Berechne Teilsumme für LG Landkreise
+			$lg_landkreise = [
+				'Landkreis Celle', 'Landkreis Cuxhaven', 'Landkreis Harburg', 'Landkreis Heidekreis',
+				'Landkreis Lüchow-Dannenberg', 'Landkreis Lüneburg', 'Landkreis Osterholz', 
+				'Landkreis Rotenburg/W.', 'Landkreis Uelzen', 'Landkreis Verden'
+			];
+			$summe_lg = 0;
+			foreach ($lg_landkreise as $lk) {
+				$summe_lg += $Vers_arr[$lk];
+			}
+
+			echo '<tr>';
+				echo '<td style="text-align:left; font-weight: bold;">Summe LG Landkreise</td><td style="text-align:right; font-weight: bold;">'.number_format($summe_lg, 0, ',', '.').'</td>';
+			echo '</tr>' . "\n";
+			
+			echo '<tr>';
+				echo '<th style="background-color: #f3f1f1;">W-E Landkreise/Städte</th><th style="text-align:right; background-color: #f3f1f1;">Anzahl Empfänger</th>';
+			echo '</tr>' . "\n";
+			echo '<tr><td style="text-align:left;">Landkreis Ammerland&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Ammerland'], 0, ',', '.').'</td></tr>' . "\n"; 
+			echo '<tr><td style="text-align:left;">Landkreis Aurich&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Aurich'], 0, ',', '.').'</td></tr>' . "\n"; 
+			echo '<tr><td style="text-align:left;">Landkreis Cloppenburg&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Cloppenburg'], 0, ',', '.').'</td></tr>' . "\n"; 
+			echo '<tr><td style="text-align:left;">Landkreis Emsland&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Emsland'], 0, ',', '.').'</td></tr>' . "\n"; 
+			echo '<tr><td style="text-align:left;">Landkreis Friesland&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Friesland'], 0, ',', '.').'</td></tr>' . "\n"; 
+			echo '<tr><td style="text-align:left;">Landkreis Grafschaft Bentheim&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Grafschaft Bentheim'], 0, ',', '.').'</td></tr>' . "\n"; 
+			echo '<tr><td style="text-align:left;">Landkreis Leer&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Leer'], 0, ',', '.').'</td></tr>' . "\n"; 
+			echo '<tr><td style="text-align:left;">Landkreis Oldenburg&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Oldenburg'], 0, ',', '.').'</td></tr>' . "\n"; 
+			echo '<tr><td style="text-align:left;">Landkreis Osnabrück&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Osnabrück'], 0, ',', '.').'</td></tr>' . "\n"; 
+			echo '<tr><td style="text-align:left;">Landkreis Vechta&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Vechta'], 0, ',', '.').'</td></tr>' . "\n";  
+			echo '<tr><td style="text-align:left;">Landkreis Wesermarsch&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Wesermarsch'], 0, ',', '.').'</td></tr>' . "\n";  
+			echo '<tr><td style="text-align:left;">Landkreis Wittmund&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Landkreis Wittmund'], 0, ',', '.').'</td></tr>' . "\n";  
+			echo '<tr><td style="text-align:left;">Stadt Delmenhorst&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Stadt Delmenhorst'], 0, ',', '.').'</td></tr>' . "\n";  
+			echo '<tr><td style="text-align:left;">Stadt Emden&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Stadt Emden'], 0, ',', '.').'</td></tr>' . "\n";  
+			echo '<tr><td style="text-align:left;">Stadt Oldenburg&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Stadt Oldenburg'], 0, ',', '.').'</td></tr>' . "\n";  
+			echo '<tr><td style="text-align:left;">Stadt Osnabrück&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Stadt Osnabrück'], 0, ',', '.').'</td></tr>' . "\n";  
+			echo '<tr><td style="text-align:left;">Stadt Wilhelmshaven&nbsp;</td><td style="text-align:right;">'.number_format($Vers_arr['Stadt Wilhelmshaven'], 0, ',', '.').'</td></tr>' . "\n"; 
+
+			// Berechne Teilsumme für W-E Landkreise/Städte
+			$we_landkreise = [
+				'Landkreis Ammerland', 'Landkreis Aurich', 'Landkreis Cloppenburg', 'Landkreis Emsland',
+				'Landkreis Friesland', 'Landkreis Grafschaft Bentheim', 'Landkreis Leer', 'Landkreis Oldenburg',
+				'Landkreis Osnabrück', 'Landkreis Vechta', 'Landkreis Wesermarsch', 'Landkreis Wittmund',
+				'Stadt Delmenhorst', 'Stadt Emden', 'Stadt Oldenburg', 'Stadt Osnabrück', 'Stadt Wilhelmshaven'
+			];
+			$summe_we = 0;
+			foreach ($we_landkreise as $lk) {
+				$summe_we += $Vers_arr[$lk];
+			}
+
+			echo '<tr>';
+				echo '<td style="text-align:left; font-weight: bold;">Summe W-E Landkreise/Städte</td><td style="text-align:right; font-weight: bold;">'.number_format($summe_we, 0, ',', '.').'</td>';
+			echo '</tr>' . "\n";
+			
+			// Gesamtsumme beider Tabellen
+			$gesamtsumme = $summe_lg + $summe_we;
+			echo '<tr>';
+				echo '<td style="text-align:left; font-weight: bold; background-color: #f0f0f0;">Gesamtsumme</td><td style="text-align:right; font-weight: bold; background-color: #f0f0f0;">'.number_format($gesamtsumme, 0, ',', '.').'</td>';
+			echo '</tr>' . "\n";
+			
+			echo '</table>';
+			echo '<p>&nbsp;</p><hr>' . "\n"; 
+		}
+		
+		?>
+		 <?php //print_r($this->test); ?>
+		</div>
+		
+		
+	<?php endif; ?>
+  
+</div>
+

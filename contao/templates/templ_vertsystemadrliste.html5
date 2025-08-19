@@ -1,0 +1,143 @@
+<!--<pre>
+ <?php //print_r($this->VertNamen); ?>
+ <?php //print_r($this->VertInstitution); ?>
+ <?php //$this->showTemplateVars(); ?>
+ <?php //echo "GET: " . \Input::get('start_datum'); ?> 
+ </pre>-->
+
+<?php /** eo: Ref: siehe Eintrag hinter "block" - eigene css-Klasse für den ges. Bereich ... **/ ?>
+<div class="<?php echo $this->class ?> block eoinfoliste"<?php echo $this->cssID ?><?php if ($this->style): ?> style="<?= $this->style ?>"<?php endif; ?>>
+
+	<?php if ($this->headline): ?>
+		<<?php echo $this->hl ?>><?php echo $this->headline ?></<?php echo $this->hl ?>>
+	<?php endif ?>
+	
+  <?php
+  echo '<p><br>Sortieren nach <a id="toggleMail" style="cursor:pointer">Mailadresse</a> | <a id="toggleName" style="cursor:pointer">Nachname</a> | <a id="toggleInstitution" style="cursor:pointer">Institution</a> | <a id="toggleThemen" style="cursor:pointer">Themen</a><span style="display:inline-block; margin-left:10rem;"><a href="formular-verteilerempfaenger.html?id=0">Empfänger hinzufügen</a></span><br>&nbsp;</p>';
+  ?>
+  
+	<?php if (empty($this->vertAdr)): ?>
+		<p style="color:red;" class="warning">Es konnten keine Verteiler ermittelt werden :-(</p>
+	<?php else: ?>
+		<?php 
+		// vertAdr[empfId] + [mail]/[name]/[comment]/[ser(themen)]
+		$vertAdr = $this->vertAdr; 
+		// themenAlle[lfdId] + [title]/[abkrz]/[kuerzel]
+		$themenAlle = $this->themenAlle; 
+		?>
+		
+		<!-- == Auflistung nach Mailadressen ========================================== -->
+		<div id="nach_mail" class="toggleMail"> <!-- style="display:none;"-->
+		<table style="background-color: #ebebeb;">
+		<!-- # -->
+		<tr><th>Mailadresse</th><th>Notiz</th><th>Thema/Verteiler</th></tr>
+		<?php
+		// eo: Mailadressen sind durch SQL-Abfrage schon sortiert
+		foreach ($vertAdr as $key => $empf_arr) {
+			unset($themen_krz_tmp);
+			$str_deaktivAnmerkung = '';
+			
+			if($vertAdr[$key]['published'] == 1) {
+				$bgcolpublished = "#ebebeb";
+			} else {
+				$bgcolpublished = "lightyellow";
+				$str_deaktivAnmerkung = '<br><span style="font-style:italic;">' . $vertAdr[$key]['published_comment'] . '</span>';
+			}
+			
+			echo '<tr style="background-color:'.$bgcolpublished.';"><td><a href="formular-verteilerempfaenger.html?id='.$key.'">'.$vertAdr[$key]['mail'].'</a></td>';
+			// #
+			echo '<td>'.$vertAdr[$key]['comment'];
+			echo $str_deaktivAnmerkung;
+			echo '</td><td width="45%">';
+			if (is_array($vertAdr[$key]['themen'])) {
+				foreach ($vertAdr[$key]['themen'] as $themen_id) {
+					// $themen_krz_tmp[] = '<span title="'.$themenAlle[$themen_id]['title'].'" style="cursor:help;">'.$themenAlle[$themen_id]['kuerzel'].'</span>';
+					$themen_krz_tmp[] = '<span title="'.$themenAlle[$themen_id]['title'].'" style="cursor:help;">'.$themenAlle[$themen_id]['abkrz'].'</span>';
+				}
+				// Liste mit Themen-Kürzel unten nochmal verwendbar
+				$id_themenliste[$key] = implode(", ",$themen_krz_tmp);
+			}
+			echo $id_themenliste[$key]; 
+			echo '</td></tr>' . "\n"; 
+		}
+		?>
+		</table>
+		</div>
+		
+		<!-- == Auflistung nach Nachnamen ========================================== -->
+		<div id="nach_name" class="toggleName" style="display:none;">
+		<table style="background-color: #ebebeb;">
+		<tr><th>Mailadresse</th><th>Notiz</th><th>Thema/Verteiler</th></tr>
+		<?php
+		// eo: Namen sind als array schon sortiert worden
+		// id_name[empfId] -> [name]
+		$id_name = $this->VertNamen;
+		foreach ($id_name as $id => $name) {
+			echo '<tr><td>'.$vertAdr[$id]['name'].'<br>(<a href="formular-verteilerempfaenger.html?id='.$id.'">'.$vertAdr[$id]['mail'].'</a>)</td>';
+			// #
+			echo '<td>'.$vertAdr[$id]['comment'].'</td><td width="45%">';
+			echo $id_themenliste[$id].'</td></tr>' . "\n"; 
+		}
+		?>
+		</table>
+		</div>
+		
+		<!-- == Auflistung nach Institution ========================================== -->
+		<div id="nach_institution" class="toggleInstitution" style="display:none;">
+		<table style="background-color: #ebebeb;">
+		<tr><th>Institution</th><th>Mailadresse</th><th>Notiz</th><th>Thema/Verteiler</th></tr>
+		<?php
+		// eo: Namen sind als array schon sortiert worden
+		// id_name[empfId] -> [name]
+		$id_institution = $this->VertInstitution;
+		foreach ($id_institution as $id => $institution) {
+			echo '<tr><td>'.$vertAdr[$id]['institution'].'</td><td><a href="formular-verteilerempfaenger.html?id='.$id.'">'.$vertAdr[$id]['mail'].'</a></td>';
+			// #
+			echo '<td>'.$vertAdr[$id]['comment'].'</td><td width="33%">';
+			echo $id_themenliste[$id].'</td></tr>' . "\n"; 
+		}
+		?>
+		</table>
+		</div>
+
+		<!-- == Auflistung nach Themen ========================================== -->
+		<div id="nach_themen" class="toggleThemen" style="display:none;">
+		<dl>
+		<?php
+		$themenVertAdr = $this->themenVertAdr;
+		
+		// sortieren nötig geworden; die neuen Verteiler, wie bspw. Corona, sind sonst am Ende der Liste ...
+		asort($themenAlle);
+		
+		foreach ($themenAlle as $key => $thema) {
+			echo '<span style="font-weight: bold; margin-top:0.6rem;">'.$themenAlle[$key]['title'].'</span><ul>' . "\n";
+			if (is_array($themenVertAdr[$key])) {
+				foreach ($themenVertAdr[$key] as $themenAdr_id) {
+					$institution = "";
+					if ($vertAdr[$themenAdr_id]['institution'] <> "") {
+						$institution = $vertAdr[$themenAdr_id]['institution'];
+					}
+					$anmerkung = "";
+					if ($vertAdr[$themenAdr_id]['comment'] <> "") {
+						$anmerkung = $vertAdr[$themenAdr_id]['comment'];
+					}
+					if ($institution != "" AND $anmerkung != "") {
+						$anmerkung = ', ' . $anmerkung;
+					}
+					echo '<li><a href="formular-verteilerempfaenger.html?id='.$themenAdr_id.'">'.$vertAdr[$themenAdr_id]['mail'].'</a> '.$institution.$anmerkung.'</li>';
+				}
+			} else {
+				echo '<li class="warning" style="font-size: small;">Diesem Thema wurden noch keine Empfänger zugeordnet.</li>' . "\n";
+			}
+			echo '</ul>';
+			/*foreach ($eoids as $key => $eoid) {
+				echo '<dd style="margin-left:1rem; text-indent: -0.5rem;">- <a href=index.php/eo-info-anzeigen.html?eoidneu='. $eoid . '>'.$eoinfos[$eoid]['title']. '</a> (Info vom '.date("d.m.Y", $eoinfos[$eoid]['datum']).')</dd>';
+			}*/
+		}
+		?>
+		</div>
+		
+	<?php endif; ?>
+  
+</div>
+

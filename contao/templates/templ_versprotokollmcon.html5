@@ -1,0 +1,52 @@
+<!-- <pre>
+ <?php //print_r($this->versandProtokollMcon); ?>
+ <?php //$this->showTemplateVars(); ?>
+ <?php //echo "GET: " . \Input::get('start_datum'); ?> 
+ </pre>-->
+
+<?php /** eo: Ref: siehe Eintrag hinter "block" - eigene css-Klasse für den ges. Bereich ... **/ ?>
+<div class="<?php echo $this->class ?> block "<?php echo $this->cssID ?><?php if ($this->style): ?> style="<?= $this->style ?>"<?php endif; ?>>
+
+	<?php if ($this->headline): ?>
+		<<?php echo $this->hl ?>><?php echo $this->headline ?></<?php echo $this->hl ?>>
+	<?php endif ?>
+	
+  
+	<?php if (empty($this->versandProtokollMcon)): ?>
+		<p style="color:red;" class="warning">Es konnte (noch) kein Versandprotokoll erstellt werden :-(</p>
+	<?php else: ?>
+		<?php 
+		// versProt[eoid] + [datum]/[title]/[themen]/[empf]/[empf_anz]
+		$versProt = $this->versandProtokollMcon;
+		$CntY = $this->CounterY;
+		$CntM = $this->CounterM;
+		?>
+		
+		<?php
+		// eo: Mailadressen sind durch SQL-Abfrage schon sortiert
+		foreach ($versProt as $jahr => $jahres_arr) {
+			echo '<table>';
+			echo '<tr style="background-color:lightsteelblue;"><td><b>'.$jahr.'</b></td><td></td><td><b>'.count($CntY[$jahr]).' Euro-Office Infos</b></td><td></td><td></td><td></td><td></td></tr>'; 
+			
+				foreach ($jahres_arr as $monat => $monats_arr) {
+					echo '<tr style="background-color:LightBlue;"><td><b>'.$monat.'/'.$jahr.'</b></td><td></td><td>'.count($CntM[$jahr.'-'.$monat]).' Euro-Office Infos</td><td></td><td></td><td></td><td></td></tr>'; 
+					echo '<tr style="background-color:whitesmoke;"><th style="text-align: left;">Datum</th><th>EO-ID</th><th style="text-align: left;">Titel</th><th>Abs.</th><th>&nbsp;Verteiler</th><th>Mitgeschickte Anlagen</th><th>&nbsp;Empf.</th></tr>';
+					
+					foreach ($monats_arr as $datum => $tages_arr) {
+						foreach ($tages_arr as $id => $id_arr) {
+							echo '<tr><td>'.$datum.'</td><td style="text-align:center;"><a href=eo-cms-info-anzeigen.html?eoidneu=' . $id . '>'.$id.'</a></td><td>'.$id_arr['title'].'</td><td>'.$id_arr['author'].'</td><td>&nbsp;'.$id_arr['vers_themen'].'</td><td style="font-size:small;">'.$id_arr['versendeteAnlagen'].'</td><td>&nbsp;'.$id_arr['vers_empfgrp'].'</td></tr>'; //
+						}
+					}
+					
+				echo '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>';
+				}
+			
+			echo '</table>';
+		}
+		?>
+		
+		
+	<?php endif; ?>
+  
+</div>
+

@@ -1,0 +1,69 @@
+<?php /* Versandstatistik nach Jahren im "eigenen Bereich" > "Versandstatistik" */ ?>
+<?php /* Ausgabe Tabelle EO-Info / Verteiler / Anzahl Empfänger */ ?>
+<!--<pre>
+ <?php //print_r($this->versandProtokoll); ?>
+ <?php //$this->showTemplateVars(); ?>
+ <?php //echo "GET: " . \Input::get('start_datum'); ?> 
+ </pre>-->
+
+<?php /** eo: Ref: siehe Eintrag hinter "block" - eigene css-Klasse für den ges. Bereich ... **/ ?>
+<div class="<?php echo $this->class ?> block "<?php echo $this->cssID ?><?php if ($this->style): ?> style="<?= $this->style ?>"<?php endif; ?>>
+
+	<?php if ($this->headline): ?>
+		<<?php echo $this->hl ?>><?php echo $this->headline ?></<?php echo $this->hl ?>>
+	<?php endif ?>
+	
+	<?php if (empty($this->versandProtokoll)): ?>
+		<p style="color:red;" class="warning">Es konnte (noch) kein Versandprotokoll erstellt werden :-(</p>
+	<?php else: ?>
+		<?php 
+		// versProt[eoid] + [datum]/[title]/[themen]/[empf]/[empf_anz]
+		$versProt = $this->versandProtokoll;
+		//$CntY = $this->CounterY;
+		//$CntM = $this->CounterM;
+		?>
+		<div style="margin-top:1rem;">
+			<h1 style="display:inline;">Versandstatistik nach Jahren</h1> &nbsp; 
+				<?php if ($this->Input->get('empf') == 'y'): ?>
+					<a class="button -single ce_rsce_tao_button -quaternary -small" style="float:right;" href="versandstatistik.html">ohne Empfängeradressen anzeigen</a>
+				<?php else: ?>
+					<a class="button -single ce_rsce_tao_button -quaternary -small" style="float:right;" href="versandstatistik.html?empf=y">mit Empfängeradressen anzeigen</a>
+				<?php endif; ?>
+			
+			<p>Hier finden Sie eine Auflistung der gemäß Ihren eingerichteten Verteilern verschickten Euro-Office Infos. Auf Grund der kompletten Erneuerung des Versandsystem sind diese Aufstellungen erst ab 2016 verfügbar.</p>
+		</div>
+		
+		<?php
+		
+	// var_dump($versProt['anzahlliste']['2022']);	
+		// eo: Mailadressen sind durch SQL-Abfrage schon sortiert
+		foreach ($versProt['infoliste'] as $jahr => $jahres_arr) {
+			$sum_empf_anz = 0;
+			if ($jahr >= 2016) {
+				echo '<table border=1>';
+				echo '<tr style="background-color:lightsteelblue;"><td><b>'.$jahr.'</b></td><td>'. $versProt['anzahlliste'][$jahr]  .' weitergeleitete Euro-Office Infos</td><td></td><td></td></tr>'; 
+				echo '<tr style="background-color:whitesmoke;"><th style="text-align: left;">Datum</th><th style="text-align: left;">Titel</th><th style="text-align: left;">Verteiler</th><th>&nbsp;Empf.</th></tr>';
+				
+					foreach ($jahres_arr as $tag => $tages_arr) {
+						foreach ($tages_arr as $eoid => $eoid_arr) {
+								echo '<tr><td style="border-top:1px solid darkgray;">'.$tag.'</td>
+								<td style="border-top:1px solid darkgray;">&nbsp;'.$eoid_arr['title'].'</td>
+								<td style="border-top:1px solid darkgray;">&nbsp;'.$eoid_arr['themen'].'</td>
+								<td style="text-align:right; border-top:1px solid darkgray;">&nbsp;'.$eoid_arr['empf_anz'].'</td></tr>';
+								if($this->Input->get('empf') == 'y') {
+									echo '<tr><td>&nbsp;</td><td colspan=3 style="font: italic 80% Courier, serif;">'.str_replace(',', ', ', $eoid_arr['empf_adr']).'</td></tr>';
+								}
+								$sum_empf_anz = $sum_empf_anz + $eoid_arr['empf_anz'];
+						}
+					}
+				
+				echo '<tr style="background-color:whitesmoke;"><td>&nbsp;</td><td></td><td></td><td style="text-align:right;"><strong>'.$sum_empf_anz.'</strong></td></tr>';
+				echo '</table>';
+			}
+		}
+		?>
+		
+	<?php endif; ?>
+  
+</div>
+

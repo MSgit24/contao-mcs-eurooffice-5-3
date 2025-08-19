@@ -1,0 +1,88 @@
+<!-- <pre>
+ <?php //print_r($this->testvar1); ?>
+ <?php //print_r($this->testvar2); ?>
+ <?php //print_r($this->testvar3); ?>
+ <?php //$this->showTemplateVars(); ?>
+ <?php //echo "GET: " . \Input::get('start_datum'); ?> 
+ </pre> -->
+ 
+<?php header("Cache-Control: max-age=180"); ?>
+
+<?php /** eo: siehe Eintrag hinter "block" - eigene css-Klasse für den ges. Bereich ... **/ ?>
+<div class="<?php echo $this->class ?> block eoinfoliste"<?php echo $this->cssID ?><?php if ($this->style): ?> style="<?= $this->style ?>"<?php endif; ?>>
+
+	<?php if ($this->headline): ?>
+		<<?php echo $this->hl ?>><?php echo $this->headline ?></<?php echo $this->hl ?>>
+	<?php endif ?>
+  
+<?php // header("Cache-Control: max-age=180"); ?>
+  
+<?php
+echo '<div class="ce_form tableless block">';
+
+echo '<form action="';
+//echo $this->replaceInsertTags("{{link_url::ueberblick}}");
+echo '" id="eoformueberblick" method="post" target="_self" enctype="application/x-www-form-urlencoded">';
+
+echo '<input type="hidden" name="REQUEST_TOKEN" value="';
+echo $this->replaceInsertTags("{{request_token}}");
+echo '" />';
+
+echo '<div class="formbody">';
+
+
+echo '<fieldset>';
+echo '<legend>Eingabe Suchbegriff(e), mindestens drei Zeichen lang</legend> ';
+// type date bietet in html5 einen datepicker, Vorgabedatum muss für korrekte Anzeige von d.m.Y auf Y-m-d umgestellt werden
+echo '<input style="width:25rem; type="text" name="suchbegriff"> &nbsp;&nbsp;
+			<input class="button -single ce_rsce_tao_button -primary" data-icon="" name="submit" value="Suche starten" type="submit">
+			
+			';
+
+
+echo '</fieldset>';
+
+echo '</div>';
+
+
+echo '</form>';
+echo '';
+echo '</div><p></p>';
+?>
+  
+  
+	<?php if (empty($this->eoinfos)): ?>
+		<p style="color:darkred;" >Bitte Suchbegriff(e) eingeben oder andere wählen ...</p>
+	<?php else: ?>
+		<?php $eoinfos = $this->eoinfos; ?>
+		
+		<p><u>Ergebnis für die Suche nach: </u> <b>"<?php echo $this->SuchFeldinhalt; ?>"</b></p>
+		
+			<div id="nach_datum" class="toggleDat">
+			<dl>
+			<?php
+			echo '<table>';
+			$datum_eoid = $this->datum_eoid;
+			foreach ($datum_eoid as $datum => $eoids) {
+				foreach ($eoids as $eoid) {
+					echo '<tr>';
+					$datum_alt == $datum ? $datum_tab = '' : $datum_tab = date("d.m.Y", $datum);
+					echo '<th>'.$datum_tab.'</th>';
+					
+					// $eoid >= 8032 ? $eohref = 'index.php/eo-info-anzeigen.html?eo_file_id=' : $eohref = 'index.php/eo-cms-info-anzeigen.html?eoidneu=';
+					echo '<td><a target="_blank" href=eo-cms-info-anzeigen.html?eoidneu=' . $eoid . '>'.$eoinfos[$eoid]['title']. '</a></td>';
+					echo '</tr>';
+					$datum_alt = $datum;
+				} 
+			}
+			echo '</table>';
+			?>
+			</dl>
+			</div>
+		
+		
+		
+	<?php endif; ?>
+  
+</div>
+

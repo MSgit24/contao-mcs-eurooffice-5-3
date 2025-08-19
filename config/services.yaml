@@ -1,0 +1,34 @@
+# config/services.yaml
+services:
+    _defaults:
+        autowire: true          # Automatically injects dependencies in your services.
+        autoconfigure: true     # Automatically registers your services as commands, event subscribers, etc.
+        public: false           # Allows optimizing the container by removing unused services; this also means
+                                # fetching services directly from the container via $container->get() won't work.
+                                # The best practice is to be explicit about your dependencies anyway.
+        bind:
+            #$projectDir: '%kernel.project_dir%'
+
+    Mcs\ContaoMcsEurooffice\:
+        resource: ../src/
+        exclude: ../src/{DependencyInjection,Model,Session}
+
+    # Add a session bag
+    mcs.contao_mcs_eurooffice.session.factory:
+        class: Mcs\ContaoMcsEurooffice\Session\SessionFactory
+        decorates: session.factory
+        arguments:
+            - '@mcs.contao_mcs_eurooffice.session.factory.inner'
+            - '@mcs.contao_mcs_eurooffice.session.attribute.array_attribute_bag'
+
+    mcs.contao_mcs_eurooffice.session.attribute.array_attribute_bag:
+        class: Mcs\ContaoMcsEurooffice\Session\Attribute\ArrayAttributeBag
+        arguments:
+            - _mcs_contao_mcs_eurooffice_attributes
+        calls:
+            - [ setName, [ mcs_contao_mcs_eurooffice ] ]
+
+    # Cronjob Services
+    Mcs\ContaoMcsEurooffice\Controller\BackendModule\EoBeKlasseEoMailer:
+        tags:
+            - { name: contao.cronjob, method: sendVersandSerie, interval: minutely }

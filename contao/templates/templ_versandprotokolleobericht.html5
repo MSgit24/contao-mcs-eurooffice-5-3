@@ -1,0 +1,54 @@
+<?php /** eo: Ref: siehe Eintrag hinter "block" - eigene css-Klasse für den ges. Bereich ... **/ ?>
+<div class="<?php echo $this->class ?> block "<?php echo $this->cssID ?><?php if ($this->style): ?> style="<?= $this->style ?>"<?php endif; ?>>
+
+	<?php if ($this->headline): ?>
+		<<?php echo $this->hl ?>><?php echo $this->headline ?></<?php echo $this->hl ?>>
+	<?php endif ?>
+	
+  
+	<?php if (empty($this->versandProtokollMcon)): ?>
+		<p style="color:red;" class="warning">Es konnte (noch) kein Versandprotokoll erstellt werden :-(</p>
+	<?php else: ?>
+		<?php 
+		$versProt = $this->versandProtokollMcon;
+		$prot_cnt = $this->versandProtokollSum;
+		$anl_cnt = $this->versandProtokollAnlSum;
+		?>
+		
+		<?php
+		foreach ($versProt as $regbez => $regbez_arr) {
+			$jahres_sum = 0;
+			foreach($prot_cnt[$regbez] as $mon_cnt) {
+				$jahres_sum = $jahres_sum + array_sum($mon_cnt);
+			}
+			
+			$jahresAnl_sum = 0;
+			foreach($anl_cnt[$regbez] as $mon_cnt) {
+				$jahresAnl_sum = $jahresAnl_sum + array_sum($mon_cnt);
+			}
+			
+			echo '<h2>für '.$regbez.'</h2>'; 
+			echo '<p><b>'.(date("Y")-1).': '.$jahres_sum.' Euro-Office Infos mit '.$jahresAnl_sum.' Anlagen</b></p>'; 
+			echo '<table>';
+			
+				foreach ($regbez_arr as $monat => $monats_arr) {
+					echo '<tr style="background-color:LightBlue;"><td><b>'.$monat.'/'.(date("Y")-1).'</b></td><td>'.array_sum($prot_cnt[$regbez][$monat]).' Euro-Office Infos mit '.array_sum($anl_cnt[$regbez][$monat]).' Anlagen</td></tr>'; 
+					
+					foreach ($monats_arr as $datum => $tages_arr) {
+						foreach ($tages_arr as $id => $id_arr) {
+							echo '<tr><td>'.$datum.'&nbsp;</td><td>'.$id_arr['title'].'</td></tr>'; //
+						}
+					}
+					
+				echo '<tr><td>&nbsp;</td><td></td></tr>';
+				}
+			
+			echo '</table>';
+		}
+		?>
+		
+		
+	<?php endif; ?>
+  
+</div>
+

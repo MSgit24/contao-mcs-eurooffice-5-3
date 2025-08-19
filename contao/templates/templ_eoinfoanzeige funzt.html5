@@ -1,0 +1,253 @@
+<!-- <pre>
+ <?php //print_r($this->eoinfo); ?>
+ <?php //print_r($this->anlagen_alt); ?>
+ <?php //$this->showTemplateVars(); ?>
+ <?php // echo "GET: " . $this->Input->get('eoidneu'); ?> 
+ <?php //echo "uID: " . $this->author; ?> 
+ </pre> -->
+ 
+
+ 
+<div class="<?php echo $this->class ?> block"<?php echo $this->cssID ?><?php if ($this->style): ?> style="<?= $this->style ?>"<?php endif; ?>>
+	<?php if ($this->headline): ?>
+		<<?php echo $this->hl ?>><?php echo $this->headline ?></<?php echo $this->hl ?>>
+	<?php endif ?>
+  
+	<?php if (empty($this->eoinfo)): ?>
+		<p style="color:red;" class="warning">Hier ist nichts zum Anzeigen angekommen :-(</p>
+	<?php else: ?>
+
+		<?php $eoinfo = $this->eoinfo; ?>
+		
+		
+		<?php
+
+		//===Eintrag in Log-System=========================================================================================
+
+		// hier im Template untergebracht, da als externe Datei (wie an den anderen Stellen) der Info-Titel nicht mit angezeigt werden kann
+
+		$log_bez_eobereich = 'Anzeige EO-Info "' . $eoinfo['title'] . '"';
+		$log_username = $this->replaceInsertTags("{{user::username}}");
+
+		// MCON-Zugriffe nicht mit loggen
+		// $this->log("$log_bez_eobereich durch $log_username", '', TL_ACCESS);
+
+		if (strpos($log_username,'MCON-')!==false) {
+			// $this->log("$log_bez_eobereich durch $log_username", '', TL_ACCESS);
+		} else {
+			//$this->log("$log_bez_eobereich durch $log_username", '', TL_ACCESS);
+			System::log("$log_username : $log_bez_eobereich ", __CLASS__.'::'.__FUNCTION__, TL_ACCESS);
+		}
+		?>
+		
+		
+		<h2><?php echo $eoinfo['title']; ?></h2>
+		<p class="eokommentar">Euro-Office Info vom <?php echo date("d.m.Y", $eoinfo['datum']); ?></p>
+		
+		<?php 
+			$teasercheckallg = trim($eoinfo['teaser_frist']) . trim($eoinfo['teaser_berechtigt']) . trim($eoinfo['teaser_fmgeber']) . trim($eoinfo['teaser_themen']) . trim($eoinfo_arr['teaser_hinweis']) . trim($eoinfo['teaser_aktualisierung']);
+			if (strlen($teasercheckallg) > 0) {
+		?>
+		
+		<div id="eoinfoteaser">
+			<table>
+			<tr><td colspan="2"><b>Überblick:</b></td></tr>
+			<?php echo (strlen(trim($eoinfo['teaser_frist'])) > 0) ? 			'<tr><td style="width:11rem;"><u>Antragsfrist</u>:</td><td>' . $eoinfo['teaser_frist'] . "</td></tr>" : "" ; ?>
+			<?php echo (strlen(trim($eoinfo['teaser_berechtigt'])) > 0) ? 		'<tr><td style="width:11rem;"><u>Antragsberechtigte</u>:&nbsp;</td><td>' . $eoinfo['teaser_berechtigt'] . "</td></tr>" : "" ; ?>
+			<?php echo (strlen(trim($eoinfo['teaser_fmgeber'])) > 0) ? 			'<tr><td style="width:11rem;"><u>Zuwendungsgeber</u>:</td><td>' . $eoinfo['teaser_fmgeber'] . "</td></tr>" : "" ; ?>
+			<?php echo (strlen(trim($eoinfo['teaser_themen'])) > 0) ? 			'<tr><td style="width:11rem;"><u>Thema</u>:</td><td>' . $eoinfo['teaser_themen'] . "</td></tr>" : "" ; ?>
+			<?php echo (strlen(trim($eoinfo['teaser_hinweis'])) > 0) ? 			'<tr><td style="width:11rem;"><u>Hinweis</u>:</td><td>' . $eoinfo['teaser_hinweis'] . "</td></tr>" : "" ; ?>
+			<?php echo (strlen(trim($eoinfo['teaser_versandthemen'])) > 0) ? 		'<tr><td style="width:11rem;"><u>Verteiler</u>:</td><td>' . $eoinfo['teaser_versandthemen'] . "</td></tr>" : "" ; ?>
+			<?php echo (strlen(trim($eoinfo['teaser_aktualisierung'])) > 0) ? 		'<tr style="background:Lavender;"><td style="width:11rem;"><u>Aktualisierung</u>:</td><td>' . $eoinfo['teaser_aktualisierung'] . "</td></tr>" : "" ; ?>
+			</table>
+			
+		</div>
+		
+		<?php
+			}
+		?>
+		
+
+		
+		
+		<div id="eoinfotext">
+			<?php
+			//---durch (alte) parallel laufende System sind Links im Quelltext, die entspr. geändert werden müssen
+			// aus dem Link auf eine EO-Info die ID extrahieren (3ter Suchstring)
+			// => regex kann ungeändert weiter verwendet werden, wenn Links auf EO-Infos mit '<a href="eoid=123456">EO-Info vom ...</a>' gesetzt werden
+			$regex = '#(<a href=")(.[^>]*)id=([0-9]*)">#'; 
+			//vom CMS den Link erzeugen lassen
+			$cmslink = $this->replaceInsertTags("{{link_url::eo-cms-info-anzeigen}}");
+			//Anfang vom <a>-Tag + Link vom CMS + ID der EO-Info: 
+			$replace = "$1$cmslink?eoidneu=$3\">"; 
+			$eoinfotext = preg_replace ($regex, $replace, $eoinfo['infotext'], -1); 
+			?>
+			<div id="box_ansprechpartner">
+			<span style="color:white; background-color:#d2cbcb; display:block; line-height:1.2rem;">&nbsp;Ansprechperson bei<br>&nbsp;Rückfragen u. a.:&nbsp;</span>
+			<div id="box_ansprechpartnerinfo">
+				
+				<ul>
+				<li data-icon=""><strong><?= $eoinfo['bearbeiter']?></strong></li>
+				<li data-icon="✉"><a href="mailto:<?= $eoinfo['bearbeiter_mail']?>"><?= $eoinfo['bearbeiter_mail']?></a></li>
+				<li data-icon=""><?= $eoinfo['bearbeiter_phone'] ?></li>
+				</ul>
+				
+			</div>
+			</div>
+			<?php echo $eoinfotext; ?>
+			
+
+<?php
+	// Feedbackteil Start -------
+	
+	
+// die Feedbacklinks werden nur den EU-Koordinatoren angezeigt,
+// also den jeweiligen Direktempfängern der EO-Info (9=LG, 12=WE) [zum Testen: 1=MCON]
+$this->import('FrontendUser', 'User'); 
+if($this->User->isMemberOf(9) OR $this->User->isMemberOf(12)) {
+
+	function b64link_encode($string){
+		$string = base64_encode($string);
+		$string = urlencode($string);
+		return $string;
+	}
+	// Quelle der Bewertung [Web / Mail]
+	$quelle = 'web';
+
+	// Wertangabe der Bewertung
+	// $bewertung = 1; s.u. bei den Links
+	 
+	// User-ID ermitteln --
+	// bei Web-/Intranetnutzung
+	$objUser = FrontendUser::getInstance();
+	$empf_id = $objUser->id;
+	// beim Mailversand
+	// $empf_id = $verstab_result->member_id;
+
+	// EO-ID ermitteln --
+	// bei Web-/Intranetnutzung
+	$eoid = $this->Input->get('eoidneu');
+	// beim Mailversand
+	// ID ist oben schon in $eoid abggelegt worden
+
+	//  Aufbau : $param = WiFoe-ID - EO-ID - Bewertung - Quelle;
+	$param_1 = $empf_id.'-'.$eoid.'-1-'.$quelle; // weniger relevant
+	$param_2 = $empf_id.'-'.$eoid.'-2-'.$quelle; // ist relevant
+
+	$crc_1 = crc32($param_1);
+	$crc_2 = crc32($param_2);
+
+	$param_final_1 = $param_1.'-'.$crc_1.'-dummy';
+	$param_final_2 = $param_2.'-'.$crc_2.'-dummy';
+
+	echo '<p style="margin-top:2.5rem;">Feedback:&nbsp;<i>Geben Sie uns gerne eine kurze Rückmeldung, inwieweit diese Euro-Office-Info von Relevanz ist (durch Klick auf einen der beiden Links):<br>&rArr; <a href="https://www.eurooffice.de/feedback.html?fb='.b64link_encode($param_final_2).'" target="_blank">ist relevant</a> / &rArr; <a href="https://www.eurooffice.de/feedback.html?fb='.b64link_encode($param_final_1).'" target="_blank">ist weniger relevant</a></i></p>';
+
+	// Feedbackteil Ende --------
+}
+?>
+		</div>
+
+
+		<?php if (!empty($this->anlagen)): ?>
+			<div id="eoinfoanlagen" class="ce_downloads block">
+			<h2>Downloads</h2>
+			<?php if ($this->Input->get('eoidneu') <= 8035): ?>
+				<p style="float:right; margin-top:-1rem; margin-right:-1rem;">
+					<a href=<?php echo 'eo-info-versand.html?ph=1&eoidneu=' . $this->Input->get('eoidneu'); ?>>
+						<img src="files/themes/EO-Intranet/mail-forward-2.png">
+						<span style="line-height: 24px; vertical-align: top;"> Anlagen versenden</span>
+					</a>
+				</p>
+			<?php endif; // keine Infos aus dem alten System versenden ?>
+		
+			<dl>
+			<?php
+			$anlagen = $this->anlagen;
+			foreach ($anlagen as $anlagenart => $datei_arr) {
+				echo '<dt>'.$anlagenart.'</dt>';
+				foreach ($datei_arr as $nr => $dateipfad) {
+					// datei-ausliefern.html des bisherigen EO-Systems ruft sendfiletobrowser auf - weiterverwenden, dafür muss "files/" raus
+					$dateilink = str_replace("files/", "", $dateipfad);
+					// Linktext ist Dateiname ohne Extension und Anlagenartkennzeichen
+					$linktext_tmp = basename($dateipfad);
+					$linktext_arr = explode("_",$linktext_tmp);
+					$linktext = str_replace($linktext_arr[0]."_", "", $linktext_tmp);
+					$linktext = str_replace("_", " ", $linktext);
+					
+					$objModel = FilesModel::findMultipleByPaths(array($dateipfad));
+					// var_dump($objModel);
+					
+					echo '<dd><a href="datei-ausliefern.html?file='.$dateilink.'">'.$linktext.'</a> <span class="eokommentar">(eingestellt am '. date("d.m.Y", $objModel->tstamp) .')</span></dd>';
+				} 
+			}
+			?>
+			</dl>
+			</div>
+		<?php endif; // keine Anlagen dabei ?>  
+		
+		<?php if (!empty($this->anlagen_alt)): ?>
+			<div id="eoinfoanlagen">
+			<dl>
+			<?php
+			$anlagen_alt = $this->anlagen_alt;
+			$anlagen_alt_datum = $this->anlagen_alt_datum;
+			foreach ($anlagen_alt as $anlagenart => $datei_arr) {
+				echo '<dt>'.$anlagenart.'</dt>';
+				foreach ($datei_arr as $dateipfad => $dateibez) {
+					// Linktext ist Dateiname ohne Extension und Anlagenartkennzeichen
+					$linktext_arr = explode(" (",$dateibez);
+					$linktext = $linktext_arr[0];
+					echo '<dd><a href="datei-ausliefern.html?file='.$dateipfad.'">'.$linktext.'</a> <span class="eokommentar">(eingestellt am '. $anlagen_alt_datum[$dateipfad] .')</span></dd>';
+				} 
+			}
+			?>
+			</dl>
+			</div>
+		<?php endif; // keine Anlagen dabei ?>  
+		
+		<?php if ($this->schlagworte): ?>
+			<div id="eoinfodetails_schlw" style="display:table-cell; float:left;">
+			<strong>zugeordnete Schlagworte:</strong>
+			<ul>
+			<?php
+				foreach ($this->schlagworte as $key => $schlagwort) {
+					echo "<li>".$schlagwort."</li>";
+				}
+			?>
+			</ul>
+			</div>
+		<?php endif; // keine Schlagworte dabei ?>
+		
+		
+		<?php if ($this->programme): ?>
+			<div id="eoinfodetails_prg" style="display:table-cell; float:left;">
+			<strong>zugeordnete Programme:</strong>
+			<ul>
+			<?php
+				foreach ($this->programme as $key => $programm) {
+					echo "<li>".$programm."</li>";
+				}
+			?>
+			</ul>
+			</div>
+		<?php endif; // keine Prgrammangaben dabei ?>
+		
+	<?php endif; // keine eoinfo-Daten angekommen ?>  
+	
+		<?php if (!empty($this->str_publ4WE_html)): ?>
+			<div id="eoinfodetails_prg" style="display:table-cell; float:left;">
+			<strong>Sichtbarkeit:</strong>
+			<ul>
+			<?php
+				echo $this->str_publ4WE_html;
+				
+				echo $this->str_publ4LG_html;
+				
+				echo $this->str_publ4Koord_html;
+			?>
+			</ul>
+			</div>
+		<?php endif; // keine Prgrammangaben dabei ?>
+	
+	
+</div>

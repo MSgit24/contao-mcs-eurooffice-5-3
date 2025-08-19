@@ -1,0 +1,51 @@
+{
+    "name": "mcs/contao-mcs-eurooffice",
+    "description": "Erweiterungen für das Euro-Office Intranet",
+    "keywords": [
+        "contao",
+        "bundle",
+        "tag 3",
+        "tag 4"
+    ],
+    "type": "contao-bundle",
+    "license": "GPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "MS",
+            "email": "schepke@mcon-consulting.de",
+            "homepage": "https://github.com/MSgit24",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/mcs/contao-mcs-eurooffice/issues",
+        "source": "https://github.com/mcs/contao-mcs-eurooffice"
+    },
+    "require": {
+        "php": "^8.1",
+        "contao/core-bundle": "^5.3"
+    },
+    "require-dev": {
+        "contao/manager-plugin": "^2.12"
+    },
+    "autoload": {
+        "psr-4": {
+            "Mcs\\ContaoMcsEurooffice\\": "src/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "contao-components/installer": false,
+            "contao/manager-plugin": false,
+            "contao-community-alliance/composer-plugin": true
+        }
+    },
+    "extra": {
+        "contao-manager-plugin": "Mcs\\ContaoMcsEurooffice\\ContaoManager\\Plugin"
+    },
+    "scripts": {
+        "cs-fixer": "@php tools/ecs/vendor/bin/ecs check config/ contao/ src/ templates/ tests/ --config tools/ecs/config.php --fix --ansi",
+        "unit-tests": "@php tools/phpunit/vendor/bin/phpunit -c tools/phpunit/phpunit.xml.dist"
+    },
+    "version": "1.0.0"
+}

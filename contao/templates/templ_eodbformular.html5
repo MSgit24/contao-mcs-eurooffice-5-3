@@ -1,0 +1,170 @@
+<?php $this->extend('block_searchable'); ?>
+
+<?php $this->block('content'); ?>
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<style>
+    .eodbformular .form-group {
+        margin-bottom: 20px;
+    }
+
+    .eodbformular .form-group select,
+    .eodbformular .form-group input[type="submit"] {
+        width: 300px;
+        margin-right: 10px;
+        box-sizing: border-box;
+    }
+
+    .eodbformular .form-group select {
+        height: 35px;
+        padding: 5px;
+    }
+
+    .eodbformular .form-group input[type="submit"] {
+        height: 35px;
+        padding: 5px;
+        background-color: #007cba;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    .eodbformular .form-group input[type="submit"]:hover {
+        background-color: #005a87;
+    }
+
+    /* Select2 Anpassungen */
+    .eodbformular .select2-container {
+        width: 500px !important;
+        margin-right: 10px;
+    }
+
+    .eodbformular .select2-container .select2-selection--single {
+        height: 35px;
+        border: 1px solid #ccc;
+    }
+
+    .eodbformular .select2-container .select2-selection--single .select2-selection__rendered {
+        line-height: 33px;
+        padding-left: 8px;
+    }
+
+    .eodbformular .select2-container .select2-selection--single .select2-selection__arrow {
+        height: 33px;
+    }
+
+    .eodbformular .form-group label {
+        margin-bottom: -0.8rem;
+        font-weight: bold;
+        font-size: large;
+    }
+
+    /* Schriftgröße für die Optionen */
+    .select2-results__options {
+        font-size: 16px !important;
+    }
+    /* Hintergrundfarbe für die Optionen */
+    .select2-results {
+        background-color: rgb(248, 248, 248);
+    }
+    /* Zeilenabstand zwischen den Optionen geringer */
+    .select2-results__option {
+        padding: 0px 6px !important;
+    }
+
+
+</style>
+
+<script>
+    jQuery(document).ready(function ($) {
+        // Select2 für alle Select-Felder initialisieren
+        $('.eodbformular select').select2({
+            placeholder: "-- Auswahl treffen --",
+            allowClear: false,
+            language: {
+                noResults: function () {
+                    return "Keine Ergebnisse gefunden";
+                },
+                searching: function () {
+                    return "Suche...";
+                }
+            }
+        });
+    });
+</script>
+
+<div class="eodbformular">
+
+    <form method="post" action="/eo-db-output.html">
+        <input type="hidden" name="REQUEST_TOKEN" value="<?= $this->requestToken ?>">
+        <!-- Aktuelle Programme -->
+        <?php if ($this->prgAktuell && count(array_filter($this->prgAktuell, function($key) { return $key > 0; }, ARRAY_FILTER_USE_KEY)) > 0): ?>
+        <div class="form-group">
+            <label for="aktuell">Aktuelle Programme:</label>
+            <select id="aktuell" name="prg_id">
+                <option value="">-- Programm auswählen --</option>
+                <?php foreach ($this->prgAktuell as $id => $title): ?>
+                <?php if ($id > 0): ?>
+                <option value="<?= $id ?>">
+                    <?= \Contao\StringUtil::specialchars($title) ?>
+                </option>
+                <?php endif; ?>
+                <?php endforeach; ?>
+            </select>
+            <input type="submit" name="submit" value="Infos zum Programm abrufen" class="btn">
+        </div>
+        <?php endif; ?>
+
+        <!-- Zukünftige Programme -->
+        <?php if ($this->prgZukunft && count($this->prgZukunft) > 0): ?>
+        <div class="form-group">
+            <label for="zukunft">Zukünftige Programme:</label>
+            <select id="zukunft" name="prg_id_zukunft">
+                <option value="">-- Programm auswählen --</option>
+                <?php foreach ($this->prgZukunft as $id => $title): ?>
+                <option value="<?= $id ?>">
+                    <?= \Contao\StringUtil::specialchars($title) ?>
+                </option>
+                <?php endforeach; ?>
+            </select>
+            <input type="submit" name="submit" value="Infos zu zukünftigem Programm abrufen" class="btn">
+        </div>
+        <?php endif; ?>
+
+        <!-- Alte Programme -->
+        <?php if ($this->prgAlt && count($this->prgAlt) > 0): ?>
+        <div class="form-group">
+            <label for="prgalt">Alte Programme:</label>
+            <select id="prgalt" name="prg_id_alt">
+                <option value="">-- Programm auswählen --</option>
+                <?php foreach ($this->prgAlt as $id => $title): ?>
+                <option value="<?= $id ?>">
+                    <?= \Contao\StringUtil::specialchars($title) ?>
+                </option>
+                <?php endforeach; ?>
+            </select>
+            <input type="submit" name="submit" value="Infos zum alten Programm abrufen" class="btn">
+        </div>
+        <?php endif; ?>
+
+        <!-- Schlagworte -->
+        <?php if ($this->schlagworte && count($this->schlagworte) > 0): ?>
+        <div class="form-group">
+            <label for="schlw">Schlagworte:</label>
+            <select id="schlw" name="schlw_id">
+                <option value="">-- Schlagwort auswählen --</option>
+                <?php foreach ($this->schlagworte as $id => $title): ?>
+                <option value="<?= $id ?>">
+                    <?= \Contao\StringUtil::specialchars($title) ?>
+                </option>
+                <?php endforeach; ?>
+            </select>
+            <input type="submit" name="submit" value="Infos zum Schlagwort abrufen" class="btn">
+        </div>
+        <?php endif; ?>
+    </form>
+</div>
+
+<?php $this->endblock(); ?>
