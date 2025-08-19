@@ -18,6 +18,7 @@ use Contao\CoreBundle\Controller\FrontendModule\AbstractFrontendModuleController
 use Contao\CoreBundle\DependencyInjection\Attribute\AsFrontendModule;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\CoreBundle\Routing\ScopeMatcher;
+use Contao\CoreBundle\InsertTag\InsertTagParser;
 use Contao\ModuleModel;
 use Contao\PageModel;
 use Contao\Template;
@@ -76,6 +77,7 @@ class FemodulAuflistungaktualisiertereoinfosController extends AbstractFrontendM
         $services['contao.framework'] = ContaoFramework::class;
         $services['database_connection'] = Connection::class;
         $services['contao.routing.scope_matcher'] = ScopeMatcher::class;
+        $services['contao.insert_tag.parser'] = InsertTagParser::class;
 
         return $services;
     }
@@ -86,6 +88,7 @@ class FemodulAuflistungaktualisiertereoinfosController extends AbstractFrontendM
         // Get the database connection
         // $db = $this->container->get('database_connection');
         $framework = $this->container->get('contao.framework');
+        $insertTagParser = $this->container->get('contao.insert_tag.parser');
         
         // Initialize Contao classes
         $frontendUser = $framework->getAdapter(FrontendUser::class);
@@ -192,7 +195,10 @@ class FemodulAuflistungaktualisiertereoinfosController extends AbstractFrontendM
             $programme_tmp = StringUtil::deserialize($row['programme']);
 			if (is_array($programme_tmp)) {
 				foreach($programme_tmp as $key => $prg_nr) {
-					$programme_eoid[$prgBez_arr[$prg_nr]][] = $row['id'];
+					// Prüfung ob Programm-ID im Array existiert, um "Undefined array key" Fehler zu vermeiden
+					if (array_key_exists($prg_nr, $prgBez_arr)) {
+						$programme_eoid[$prgBez_arr[$prg_nr]][] = $row['id'];
+					}
 				}
 			}
 			
@@ -200,7 +206,10 @@ class FemodulAuflistungaktualisiertereoinfosController extends AbstractFrontendM
             $schlagworte_tmp = StringUtil::deserialize($row['schlagworte']);
 			if (is_array($schlagworte_tmp)) {
 				foreach($schlagworte_tmp as $key => $schlw_nr) {
-					$schlagworte_eoid[$schlwBez_arr[$schlw_nr]][] = $row['id'];
+					// Prüfung ob Schlagwort-ID im Array existiert, um "Undefined array key" Fehler zu vermeiden
+					if (array_key_exists($schlw_nr, $schlwBez_arr)) {
+						$schlagworte_eoid[$schlwBez_arr[$schlw_nr]][] = $row['id'];
+					}
 				}
 			}
 			$datum_eoid[$row['datum']][] = $row['id'];
@@ -236,7 +245,10 @@ class FemodulAuflistungaktualisiertereoinfosController extends AbstractFrontendM
 				$result_dbalt_prg = $database->prepare('SELECT programm FROM tl_eoalt_file_prg WHERE file_id = ?')->execute($row_dbalt['file_id']);
 				while ($result_dbalt_prg->next()) {
 					$row_dbalt_prg = $result_dbalt_prg->row();
-					$programme_eoid[$prgBez_arr[$row_dbalt_prg['programm']]][] = $row_dbalt['file_id'];
+					// Prüfung ob Programm-ID im Array existiert, um "Undefined array key" Fehler zu vermeiden
+					if (array_key_exists($row_dbalt_prg['programm'], $prgBez_arr)) {
+						$programme_eoid[$prgBez_arr[$row_dbalt_prg['programm']]][] = $row_dbalt['file_id'];
+					}
 				}
 				
 				// var_dump($programme_eoid);
@@ -245,7 +257,10 @@ class FemodulAuflistungaktualisiertereoinfosController extends AbstractFrontendM
 				$result_dbalt_schlw = $database->prepare('SELECT schlagwort FROM tl_eoalt_file_schlw WHERE file_id = ?')->execute($row_dbalt['file_id']);
 				while ($result_dbalt_schlw->next()) {
 					$row_dbalt_schlw = $result_dbalt_schlw->row();
-					$schlagworte_eoid[$schlwBez_arr[$row_dbalt_schlw['schlagwort']]][] = $row_dbalt['file_id'];
+					// Prüfung ob Schlagwort-ID im Array existiert, um "Undefined array key" Fehler zu vermeiden
+					if (array_key_exists($row_dbalt_schlw['schlagwort'], $schlwBez_arr)) {
+						$schlagworte_eoid[$schlwBez_arr[$row_dbalt_schlw['schlagwort']]][] = $row_dbalt['file_id'];
+					}
 				}
 			}
 			
@@ -266,6 +281,8 @@ class FemodulAuflistungaktualisiertereoinfosController extends AbstractFrontendM
         // $this->Template->zeitraum = $zeitraum_tstamp;
         $template->eoinfos = $eoinfo;
         $template->zeitraum = $zeitraum_tstamp;
+        $template->insertTagParser = $insertTagParser;
+        $template->frontendUser = $objUser; // NEU in Contao 5.3
         
         //$template->programme_eoid = $programme_eoid;
         //$template->schlagworte_eoid = $schlagworte_eoid;

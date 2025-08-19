@@ -21,7 +21,7 @@ echo '<form action="';
 echo '" id="eoformueberblick" method="post" target="_self" enctype="application/x-www-form-urlencoded">';
 
 echo '<input type="hidden" name="REQUEST_TOKEN" value="';
-echo $this->replaceInsertTags("{{request_token}}");
+echo $this->insertTagParser->replaceInline("{{request_token}}");
 echo '" />';
 
 echo '<div class="formbody">';
@@ -32,10 +32,10 @@ echo '<legend>Zeitraum festlegen (Datum der Euro-Office Info)</legend> ';
 // type date bietet in html5 einen datepicker, Vorgabedatum muss für korrekte Anzeige von d.m.Y auf Y-m-d umgestellt werden
 echo '<span style="display:inline-block; width:2rem;">von </span>	<input type="date" name="start_datum" value="' .date("Y-m-d", $this->zeitraum[0]). '"> bis 
 			<input type="date" name="end_datum"   value="' .date("Y-m-d", $this->zeitraum[1]). '">&nbsp;
-			<input class="button -single ce_rsce_tao_button -primary" data-icon="" name="submit" value="anzeigen" type="submit">
+			<input class="button -single ce_rsce_tao_button -primary" data-icon=" " name="submit" value="anzeigen" type="submit">
 			
 			';
-echo '</fieldset>';
+echo '</fieldset>'; // ""
 
 echo '</div>';
 
@@ -69,11 +69,12 @@ echo '</div><p></p>';
 			?>
 				
 		<?php
-		$this->import("FrontendUser","User");
-		if ($this->User->id == 126) {
+		// $this->import("FrontendUser","User"); // veraltet in Contao 5.3
+		// if ($this->User->id == 126) {
+		if ($this->frontendUser && $this->frontendUser->id == 126) {
 		
+			// tue was, wenn MS (ID 126) eingeloggt ist
 
-		
 		}
 		?>
 		
