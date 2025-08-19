@@ -21,7 +21,7 @@ echo '<form action="';
 echo '" id="eoformueberblick" method="post" target="_self" enctype="application/x-www-form-urlencoded">';
 
 echo '<input type="hidden" name="REQUEST_TOKEN" value="';
-echo $this->replaceInsertTags("{{request_token}}");
+echo $this->insertTagParser->replaceInline("{{request_token}}"); // neu in Contao 5.3
 echo '" />';
 
 echo '<div class="formbody">';
@@ -116,11 +116,9 @@ echo '</div><p></p>';
 			</dl>
 			</div>
 		<?php
-		$this->import("FrontendUser","User");
-		if ($this->User->id == 126) {
-		
-
-		
+		// $this->import("FrontendUser","User"); // veraltet in Contao 5.3
+		if ($this->frontendUser && $this->frontendUser->id == 126) {
+			// tue was, wenn MS (ID 126) eingeloggt ist
 		}
 		?>
 		

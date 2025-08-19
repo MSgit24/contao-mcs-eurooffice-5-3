@@ -18,6 +18,7 @@ use Contao\CoreBundle\Controller\FrontendModule\AbstractFrontendModuleController
 use Contao\CoreBundle\DependencyInjection\Attribute\AsFrontendModule;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\CoreBundle\Routing\ScopeMatcher;
+use Contao\CoreBundle\InsertTag\InsertTagParser; // wieder aktiviert
 use Contao\ModuleModel;
 use Contao\PageModel;
 use Contao\Template;
@@ -76,12 +77,22 @@ class FemodulAuflistungeoinfosController extends AbstractFrontendModuleControlle
         $services['contao.framework'] = ContaoFramework::class;
         $services['database_connection'] = Connection::class;
         $services['contao.routing.scope_matcher'] = ScopeMatcher::class;
+        $services['contao.insert_tag.parser'] = InsertTagParser::class; // wieder aktiviert
 
         return $services;
     }
 
     protected function getResponse(Template $template, ModuleModel $model, Request $request): Response
     {
+        // Get the framework to access Contao classes
+        $framework = $this->container->get('contao.framework');
+        $insertTagParser = $this->container->get('contao.insert_tag.parser'); // wieder aktiviert
+        
+        // Initialize Contao classes
+        $frontendUser = $framework->getAdapter(FrontendUser::class);
+        $input = $framework->getAdapter(Input::class);
+        $database = $framework->getAdapter(Database::class);
+        
         // $objUser = \FrontendUser::getInstance();
         $objUser = FrontendUser::getInstance();
         
@@ -248,6 +259,8 @@ class FemodulAuflistungeoinfosController extends AbstractFrontendModuleControlle
 		$template->programme_eoid = $programme_eoid;
 		$template->schlagworte_eoid = $schlagworte_eoid;
 		$template->datum_eoid = $datum_eoid;
+		$template->insertTagParser = $insertTagParser; // wieder aktiviert
+		$template->frontendUser = $objUser; // neu in Contao 5.3
 
         return $template->getResponse();
     }
