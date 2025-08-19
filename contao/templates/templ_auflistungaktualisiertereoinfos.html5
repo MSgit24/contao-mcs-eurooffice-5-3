@@ -21,7 +21,7 @@ echo '<form action="';
 echo '" id="eoformueberblick" method="post" target="_self" enctype="application/x-www-form-urlencoded">';
 
 echo '<input type="hidden" name="REQUEST_TOKEN" value="';
-echo $this->insertTagParser->replaceInline("{{request_token}}");
+echo $this->insertTagParser->replaceInline("{{request_token}}"); // neu in Contao 5.3
 echo '" />';
 
 echo '<div class="formbody">';

@@ -18,7 +18,7 @@ use Contao\CoreBundle\Controller\FrontendModule\AbstractFrontendModuleController
 use Contao\CoreBundle\DependencyInjection\Attribute\AsFrontendModule;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\CoreBundle\Routing\ScopeMatcher;
-use Contao\CoreBundle\InsertTag\InsertTagParser;
+use Contao\CoreBundle\InsertTag\InsertTagParser; // neu in Contao 5.3
 use Contao\ModuleModel;
 use Contao\PageModel;
 use Contao\Template;
@@ -77,7 +77,7 @@ class FemodulAuflistungaktualisiertereoinfosController extends AbstractFrontendM
         $services['contao.framework'] = ContaoFramework::class;
         $services['database_connection'] = Connection::class;
         $services['contao.routing.scope_matcher'] = ScopeMatcher::class;
-        $services['contao.insert_tag.parser'] = InsertTagParser::class;
+        $services['contao.insert_tag.parser'] = InsertTagParser::class; // neu in Contao 5.3
 
         return $services;
     }
@@ -88,7 +88,7 @@ class FemodulAuflistungaktualisiertereoinfosController extends AbstractFrontendM
         // Get the database connection
         // $db = $this->container->get('database_connection');
         $framework = $this->container->get('contao.framework');
-        $insertTagParser = $this->container->get('contao.insert_tag.parser');
+        $insertTagParser = $this->container->get('contao.insert_tag.parser'); // neu in Contao 5.3
         
         // Initialize Contao classes
         $frontendUser = $framework->getAdapter(FrontendUser::class);
@@ -281,7 +281,7 @@ class FemodulAuflistungaktualisiertereoinfosController extends AbstractFrontendM
         // $this->Template->zeitraum = $zeitraum_tstamp;
         $template->eoinfos = $eoinfo;
         $template->zeitraum = $zeitraum_tstamp;
-        $template->insertTagParser = $insertTagParser;
+        $template->insertTagParser = $insertTagParser; // neu in Contao 5.3
         $template->frontendUser = $objUser; // NEU in Contao 5.3
         
         //$template->programme_eoid = $programme_eoid;
